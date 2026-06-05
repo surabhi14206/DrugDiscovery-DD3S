@@ -1,0 +1,214 @@
+{% extends 'base.html' %}
+
+{% block title %}Export Your Data{% endblock %}
+
+{% block extra_css %}
+<style>
+    .export-container {
+        max-width: 800px;
+        margin: 40px auto;
+    }
+    .export-card {
+        border: none;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        border-radius: 15px;
+    }
+    .export-header {
+        background: linear-gradient(135deg, #0d6efd 0%, #0a58ca 100%);
+        color: white;
+        padding: 30px;
+        border-radius: 15px 15px 0 0;
+        text-align: center;
+    }
+    
+    /* Recommended Theme - Use navbar color */
+    [data-theme="recomended"] .export-header,
+    .theme-recomended .export-header {
+        background: linear-gradient(135deg, #5a7a96 0%, #4a6a86 100%);
+    }
+    
+    /* Dark Theme - Use navbar color */
+    [data-theme="dark"] .export-header,
+    .theme-dark .export-header {
+        background: linear-gradient(135deg, #2d2d2d 0%, #1a1a1a 100%);
+    }
+    
+    .export-header i {
+        font-size: 3rem;
+        margin-bottom: 15px;
+    }
+    .form-section {
+        padding: 25px;
+        border-bottom: 1px solid #f0f0f0;
+    }
+    .form-section:last-child {
+        border-bottom: none;
+    }
+    .form-section h5 {
+        color: #667eea;
+        margin-bottom: 15px;
+    }
+    .export-option {
+        padding: 15px;
+        border: 2px solid #e0e0e0;
+        border-radius: 8px;
+        margin-bottom: 10px;
+        cursor: pointer;
+        transition: all 0.3s;
+    }
+    .export-option:hover {
+        border-color: #667eea;
+        background-color: #f8f9ff;
+    }
+    .export-option.selected {
+        border-color: #667eea;
+        background-color: #f0f4ff;
+    }
+    .btn-download {
+        padding: 15px;
+        font-size: 1.2rem;
+        border-radius: 10px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="export-container">
+    <div class="card export-card">
+        <div class="export-header">
+            <i class="fas fa-download"></i>
+            <h2 class="mb-0">Export Data</h2>
+            <p class="mb-0">Download user data in various formats</p>
+        </div>
+        <div class="card-body p-0">
+            {% if messages %}
+                <div class="p-3">
+                    {% for message in messages %}
+                    <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                        {{ message }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
+                    {% endfor %}
+                </div>
+            {% endif %}
+
+            <form method="post">
+                {% csrf_token %}
+                
+                {% if request.user.is_staff %}
+                <div class="form-section">
+                    <h5><i class="fas fa-user"></i> Select User (Admin Only)</h5>
+                    <select name="user_id" class="form-select form-select-lg">
+                        <option value="">My Data ({{ request.user.username }})</option>
+                        {% for user in all_users %}
+                        <option value="{{ user.id }}">{{ user.username }} - {{ user.email }}</option>
+                        {% endfor %}
+                    </select>
+                    <small class="text-muted d-block mt-2">
+                        <i class="fas fa-info-circle"></i> As an admin, you can export data for any user
+                    </small>
+                </div>
+                {% endif %}
+                
+                <div class="form-section">
+                    <h5><i class="fas fa-database"></i> Select Data Type</h5>
+                    <select name="data_type" class="form-select form-select-lg" required>
+                        <option value="all">All Data (Complete Export)</option>
+                        <option value="activities">Activity History</option>
+                        <option value="searches">Search History</option>
+                        <option value="predictions">Prediction History</option>
+                        <option value="molecules">Viewed Molecules</option>
+                    </select>
+                    <small class="text-muted d-block mt-2">
+                        <i class="fas fa-info-circle"></i> Choose which data you want to export
+                    </small>
+                </div>
+
+                <div class="form-section">
+                    <h5><i class="fas fa-file-export"></i> Export Format</h5>
+                    <div class="row">
+                        <div class="col-md-4">
+                            <label class="export-option">
+                                <input type="radio" name="export_format" value="json" checked style="display: none;">
+                                <div class="text-center">
+                                    <i class="fas fa-code fa-2x text-primary mb-2"></i>
+                                    <div class="fw-bold">JSON</div>
+                                    <div class="text-muted small">Machine readable</div>
+                                </div>
+                            </label>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="export-option">
+                                <input type="radio" name="export_format" value="csv" style="display: none;">
+                                <div class="text-center">
+                                    <i class="fas fa-table fa-2x text-success mb-2"></i>
+                                    <div class="fw-bold">CSV</div>
+                                    <div class="text-muted small">Spreadsheet format</div>
+                                </div>
+                            </label>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="export-option">
+                                <input type="radio" name="export_format" value="excel" style="display: none;">
+                                <div class="text-center">
+                                    <i class="fas fa-file-excel fa-2x text-warning mb-2"></i>
+                                    <div class="fw-bold">Excel</div>
+                                    <div class="text-muted small">XLSX format</div>
+                                </div>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-section">
+                    <h5><i class="fas fa-calendar-alt"></i> Date Range (Optional)</h5>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <label class="form-label">From Date</label>
+                            <input type="date" name="start_date" class="form-control">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">To Date</label>
+                            <input type="date" name="end_date" class="form-control">
+                        </div>
+                    </div>
+                    <small class="text-muted d-block mt-2">
+                        <i class="fas fa-info-circle"></i> Leave empty to export all data
+                    </small>
+                </div>
+
+                <div class="form-section">
+                    <div class="alert alert-warning">
+                        <i class="fas fa-exclamation-triangle"></i>
+                        <strong>Privacy Notice:</strong> Your data will be downloaded directly to your device. 
+                        We do not share or transmit your personal data to third parties.
+                    </div>
+                    
+                    <div class="d-grid gap-2">
+                        <button type="submit" class="btn btn-primary btn-download">
+                            <i class="fas fa-download"></i> Download Data
+                        </button>
+                        <a href="{% url 'authentication:profile' %}" class="btn btn-outline-secondary">
+                            <i class="fas fa-arrow-left"></i> Back to Profile
+                        </a>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Add click event to export format options
+    document.querySelectorAll('.export-option').forEach(option => {
+        option.addEventListener('click', function() {
+            document.querySelectorAll('.export-option').forEach(opt => opt.classList.remove('selected'));
+            this.classList.add('selected');
+            this.querySelector('input[type="radio"]').checked = true;
+        });
+    });
+    
+    // Mark initially selected option
+    document.querySelector('input[name="export_format"]:checked').closest('.export-option').classList.add('selected');
+</script>
+{% endblock %}

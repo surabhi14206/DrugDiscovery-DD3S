@@ -1,0 +1,256 @@
+{% extends 'base.html' %}
+
+{% block title %}Edit User{% endblock %}
+
+{% block extra_css %}
+<style>
+    .edit-user-container {
+        max-width: 800px;
+        margin: 40px auto;
+    }
+
+    .edit-user-card {
+        border: none;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        border-radius: 15px;
+    }
+
+    .edit-user-header {
+        background: linear-gradient(135deg, #0d6efd 0%, #0a58ca 100%);
+        color: white;
+        padding: 30px;
+        border-radius: 15px 15px 0 0;
+        text-align: center;
+    }
+
+    /* Recommended Theme */
+    [data-theme="recomended"] .edit-user-header,
+    .theme-recomended .edit-user-header {
+        background: linear-gradient(135deg, #5a7a96 0%, #4a6a86 100%);
+    }
+
+    /* Dark Theme */
+    [data-theme="dark"] .edit-user-header,
+    .theme-dark .edit-user-header {
+        background: linear-gradient(135deg, #2d2d2d 0%, #1a1a1a 100%);
+    }
+
+    .form-section {
+        padding: 30px;
+    }
+
+    .form-section-title {
+        font-size: 18px;
+        font-weight: 600;
+        margin-bottom: 20px;
+        color: #2c3e50;
+        padding-bottom: 10px;
+        border-bottom: 2px solid #e9ecef;
+    }
+
+    .required-field::after {
+        content: " *";
+        color: #dc3545;
+    }
+
+    .password-section {
+        background: #fff3cd;
+        border: 1px solid #ffc107;
+        border-radius: 8px;
+        padding: 15px;
+        margin-bottom: 20px;
+    }
+
+    .alt-bg {
+        background-color: #f8f9fa;
+    }
+
+    /* Dark Theme Form Styles */
+    .theme-dark .form-section-title {
+        color: #e8edf5;
+        border-bottom-color: #2b303c;
+    }
+
+    .theme-dark .alt-bg {
+        background-color: rgba(0, 0, 0, 0.2) !important;
+    }
+
+    .theme-dark .password-section {
+        background-color: rgba(255, 194, 7, 0.1);
+        border-color: rgba(255, 194, 7, 0.4);
+        color: #ffda6a;
+    }
+
+    .theme-dark .password-section .form-text {
+        color: #c9af59;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="edit-user-container">
+    <div class="card edit-user-card">
+        <div class="edit-user-header">
+            <h2 class="mb-0">Edit User</h2>
+            <p class="mb-0">Update user account information</p>
+        </div>
+
+        <div class="card-body p-0">
+            {% if messages %}
+            <div class="p-3">
+                {% for message in messages %}
+                <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                    {{ message }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+                {% endfor %}
+            </div>
+            {% endif %}
+
+            <form method="post" id="editUserForm">
+                {% csrf_token %}
+
+                <div class="form-section">
+                    <div class="form-section-title">Account Information</div>
+
+                    <div class="mb-3">
+                        <label for="{{ form.username.id_for_label }}" class="form-label required-field">
+                            Username
+                        </label>
+                        {{ form.username }}
+                        {% if form.username.help_text %}
+                        <div class="form-text">{{ form.username.help_text }}</div>
+                        {% endif %}
+                        {% if form.username.errors %}
+                        <div class="text-danger">{{ form.username.errors.0 }}</div>
+                        {% endif %}
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="{{ form.email.id_for_label }}" class="form-label required-field">
+                            Email Address
+                        </label>
+                        {{ form.email }}
+                        {% if form.email.errors %}
+                        <div class="text-danger">{{ form.email.errors.0 }}</div>
+                        {% endif %}
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="{{ form.first_name.id_for_label }}" class="form-label">
+                                First Name
+                            </label>
+                            {{ form.first_name }}
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="{{ form.last_name.id_for_label }}" class="form-label">
+                                Last Name
+                            </label>
+                            {{ form.last_name }}
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-section alt-bg">
+                    <div class="form-section-title">Change Password (Optional)</div>
+
+                    <div class="password-section">
+                        <div class="form-check mb-3">
+                            {{ form.change_password }}
+                            <label class="form-check-label fw-bold" for="{{ form.change_password.id_for_label }}">
+                                Change User Password
+                            </label>
+                            <div class="form-text">Check this box if you want to set a new password for this user</div>
+                        </div>
+                    </div>
+
+                    <div id="passwordFields" style="display: none;">
+                        <div class="mb-3">
+                            <label for="{{ form.new_password1.id_for_label }}" class="form-label">
+                                New Password
+                            </label>
+                            {{ form.new_password1 }}
+                            {% if form.new_password1.errors %}
+                            <div class="text-danger">{{ form.new_password1.errors.0 }}</div>
+                            {% endif %}
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="{{ form.new_password2.id_for_label }}" class="form-label">
+                                Confirm New Password
+                            </label>
+                            {{ form.new_password2 }}
+                            {% if form.new_password2.errors %}
+                            <div class="text-danger">{{ form.new_password2.errors.0 }}</div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-section">
+                    <div class="form-section-title">Permissions & Status</div>
+
+                    <div class="form-check mb-3">
+                        {{ form.is_active }}
+                        <label class="form-check-label" for="{{ form.is_active.id_for_label }}">
+                            {{ form.is_active.label }}
+                        </label>
+                        {% if form.is_active.help_text %}
+                        <div class="form-text">{{ form.is_active.help_text }}</div>
+                        {% endif %}
+                    </div>
+
+                    <div class="form-check mb-3">
+                        {{ form.is_staff }}
+                        <label class="form-check-label" for="{{ form.is_staff.id_for_label }}">
+                            {{ form.is_staff.label }}
+                        </label>
+                        {% if form.is_staff.help_text %}
+                        <div class="form-text">{{ form.is_staff.help_text }}</div>
+                        {% endif %}
+                    </div>
+
+                    <div class="form-check mb-3">
+                        {{ form.email_verified }}
+                        <label class="form-check-label" for="{{ form.email_verified.id_for_label }}">
+                            {{ form.email_verified.label }}
+                        </label>
+                        {% if form.email_verified.help_text %}
+                        <div class="form-text">{{ form.email_verified.help_text }}</div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <div class="p-4 alt-bg">
+                    <div class="d-grid gap-2">
+                        <button type="submit" class="btn btn-primary btn-lg">
+                            Update User
+                        </button>
+                        <a href="{% url 'admin_dashboard:user_detail' user_to_edit.id %}"
+                            class="btn btn-outline-secondary">
+                            Cancel
+                        </a>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Toggle password fields visibility
+    document.addEventListener('DOMContentLoaded', function () {
+        const changePasswordCheckbox = document.getElementById('{{ form.change_password.id_for_label }}');
+        const passwordFields = document.getElementById('passwordFields');
+
+        changePasswordCheckbox.addEventListener('change', function () {
+            if (this.checked) {
+                passwordFields.style.display = 'block';
+            } else {
+                passwordFields.style.display = 'none';
+            }
+        });
+    });
+</script>
+{% endblock %}

@@ -1,0 +1,188 @@
+{% extends 'base.html' %}
+
+{% block title %}Profile - {{ user.username }}{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="row">
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-body text-center">
+                    <div class="mb-3 position-relative d-inline-block">
+                        {% if user.profile_photo %}
+                        <img src="{{ user.profile_photo.url }}" alt="Profile Photo" 
+                             class="rounded-circle" 
+                             style="width: 150px; height: 150px; object-fit: cover;">
+                        {% else %}
+                        <i class="fas fa-user-circle fa-5x text-primary" style="font-size: 150px;"></i>
+                        {% endif %}
+                        <button type="button" class="btn btn-sm btn-primary rounded-circle position-absolute" 
+                                style="bottom: 10px; right: 10px; width: 40px; height: 40px; padding: 0;"
+                                data-bs-toggle="modal" data-bs-target="#photoUploadModal"
+                                title="Change profile photo">
+                            <i class="fas fa-pen"></i>
+                        </button>
+                    </div>
+                    <h4>{{ user.get_full_name|default:user.username }}</h4>
+                    <p class="text-muted">{{ user.email }}</p>
+                    
+                    {% if user.role == 'admin' %}
+                    <span class="badge bg-danger">
+                        <i class="fas fa-shield-alt"></i> Admin
+                    </span>
+                    {% else %}
+                    <span class="badge bg-primary">
+                        <i class="fas fa-user"></i> User
+                    </span>
+                    {% endif %}
+                    
+                    <hr>
+                    
+                    <div class="text-start">
+                        <p><i class="fas fa-calendar"></i> <strong>Joined:</strong> {{ user.date_joined|date:"F d, Y" }}</p>
+                        <p><i class="fas fa-clock"></i> <strong>Last Activity:</strong> {{ user.last_activity|date:"F d, Y H:i" }}</p>
+                        
+                        <p class="mb-1"><strong>Security Status:</strong></p>
+                        <p>
+                            {% if user.email_verified %}
+                            <span class="badge bg-success"><i class="fas fa-check"></i> Email Verified</span>
+                            {% else %}
+                            <span class="badge bg-warning"><i class="fas fa-exclamation"></i> Email Not Verified</span>
+                            <a href="{% url 'authentication:send_verification' %}" class="btn btn-sm btn-outline-primary d-block mt-2">
+                                <i class="fas fa-envelope"></i> Verify Email
+                            </a>
+                            {% endif %}
+                        </p>
+                        <p>
+                            {% if user.two_factor_enabled %}
+                            <span class="badge bg-success"><i class="fas fa-shield-check"></i> 2FA Enabled</span>
+                            <a href="{% url 'authentication:disable_2fa' %}" class="btn btn-sm btn-outline-secondary d-block mt-2">
+                                <i class="fas fa-cog"></i> Manage 2FA
+                            </a>
+                            {% else %}
+                            <span class="badge bg-secondary"><i class="fas fa-shield-alt"></i> 2FA Disabled</span>
+                            <a href="{% url 'authentication:setup_2fa' %}" class="btn btn-sm btn-outline-primary d-block mt-2">
+                                <i class="fas fa-shield-alt"></i> Enable 2FA
+                            </a>
+                            {% endif %}
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header">
+                    <h5><i class="fas fa-cog"></i> Account Settings</h5>
+                </div>
+                <div class="card-body">
+                    <h6 class="mb-3">Security</h6>
+                    <div class="list-group mb-4">
+                        <a href="{% url 'admin_dashboard:change_password_page' %}" class="list-group-item list-group-item-action">
+                            <i class="fas fa-key"></i> Change Password
+                        </a>
+                        {% if user.two_factor_enabled %}
+                        <a href="{% url 'authentication:disable_2fa' %}" class="list-group-item list-group-item-action">
+                            <i class="fas fa-shield-alt"></i> Manage Two-Factor Authentication
+                            <span class="badge bg-success float-end">Enabled</span>
+                        </a>
+                        {% else %}
+                        <a href="{% url 'authentication:setup_2fa' %}" class="list-group-item list-group-item-action">
+                            <i class="fas fa-mobile-alt"></i> Enable Two-Factor Authentication
+                            <span class="badge bg-secondary float-end">Recommended</span>
+                        </a>
+                        {% endif %}
+                        {% if not user.email_verified %}
+                        <a href="{% url 'authentication:send_verification' %}" class="list-group-item list-group-item-action text-primary">
+                            <i class="fas fa-envelope-circle-check"></i> Verify Email Address
+                        </a>
+                        {% endif %}
+                    </div>
+
+                    <h6 class="mb-3">Preferences</h6>
+                    <div class="list-group mb-4">
+                        <a href="{% url 'admin_dashboard:notifications_page' %}" class="list-group-item list-group-item-action">
+                            <i class="fas fa-bell"></i> Notification Settings
+                        </a>
+                        <a href="{% url 'admin_dashboard:theme_page' %}" class="list-group-item list-group-item-action">
+                            <i class="fas fa-palette"></i> Theme Settings
+                        </a>
+                    </div>
+
+                    {% if user.role == 'admin' %}
+                    <h6 class="mb-3">Admin Tools</h6>
+                    <div class="list-group mb-4">
+                        <a href="{% url 'admin_dashboard:dashboard' %}" class="list-group-item list-group-item-action">
+                            <i class="fas fa-chart-line"></i> Admin Dashboard
+                        </a>
+                        <a href="/admin/" class="list-group-item list-group-item-action">
+                            <i class="fas fa-cog"></i> Django Admin Panel
+                        </a>
+                    </div>
+                    {% endif %}
+
+                    <h6 class="mb-3">Data Management</h6>
+                    <div class="list-group mb-4">
+                        <a href="{% url 'admin_dashboard:export_page' %}" class="list-group-item list-group-item-action">
+                            <i class="fas fa-download"></i> Download Your Data
+                        </a>
+                        <a href="#" class="list-group-item list-group-item-action text-danger">
+                            <i class="fas fa-trash"></i> Delete Account
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Photo Upload Modal -->
+<div class="modal fade" id="photoUploadModal" tabindex="-1" aria-labelledby="photoUploadModalLabel" aria-hidden="true" data-bs-theme="{% if user.is_authenticated and user.preferences and user.preferences.theme == 'dark' %}dark{% else %}light{% endif %}">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="photoUploadModalLabel">
+                    <i class="fas fa-camera"></i> Change Profile Photo
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form method="post" action="{% url 'authentication:upload_photo' %}" enctype="multipart/form-data" id="photoUploadForm">
+                {% csrf_token %}
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="profilePhoto" class="form-label">Choose a photo</label>
+                        <input type="file" class="form-control" id="profilePhoto" name="profile_photo" 
+                               accept="image/*" required>
+                        <div class="form-text">Maximum file size: 5MB. Supported formats: JPG, PNG, GIF</div>
+                    </div>
+                    <div id="imagePreview" class="text-center mt-3" style="display: none;">
+                        <img id="previewImg" src="" alt="Preview" class="img-thumbnail" style="max-width: 200px; max-height: 200px;">
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-upload"></i> Upload Photo
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+// Preview image before upload
+document.getElementById('profilePhoto').addEventListener('change', function(e) {
+    const file = e.target.files[0];
+    if (file) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            document.getElementById('previewImg').src = e.target.result;
+            document.getElementById('imagePreview').style.display = 'block';
+        };
+        reader.readAsDataURL(file);
+    }
+});
+</script>
+{% endblock %}

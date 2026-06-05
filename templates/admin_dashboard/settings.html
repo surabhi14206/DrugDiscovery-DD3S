@@ -1,0 +1,487 @@
+{% extends 'base.html' %}
+
+{% block title %}Admin Settings{% endblock %}
+
+{% block extra_css %}
+<style>
+    .settings-card {
+        border: none;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        transition: transform 0.2s, box-shadow 0.2s;
+        margin-bottom: 20px;
+    }
+    .settings-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+    }
+    .settings-header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 20px;
+        border-radius: 10px 10px 0 0;
+    }
+    .settings-section {
+        padding: 25px;
+    }
+    .setting-item {
+        padding: 15px;
+        border-bottom: 1px solid #f0f0f0;
+    }
+    .setting-item:last-child {
+        border-bottom: none;
+    }
+    .setting-label {
+        font-weight: 600;
+        margin-bottom: 5px;
+    }
+    .setting-description {
+        font-size: 0.9rem;
+        color: #6c757d;
+        margin-bottom: 10px;
+    }
+    .switch {
+        position: relative;
+        display: inline-block;
+        width: 50px;
+        height: 24px;
+    }
+    .switch input {
+        opacity: 0;
+        width: 0;
+        height: 0;
+    }
+    .slider {
+        position: absolute;
+        cursor: pointer;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background-color: #ccc;
+        transition: .4s;
+        border-radius: 24px;
+    }
+    .slider:before {
+        position: absolute;
+        content: "";
+        height: 18px;
+        width: 18px;
+        left: 3px;
+        bottom: 3px;
+        background-color: white;
+        transition: .4s;
+        border-radius: 50%;
+    }
+    input:checked + .slider {
+        background-color: #667eea;
+    }
+    input:checked + .slider:before {
+        transform: translateX(26px);
+    }
+    .icon-box {
+        width: 50px;
+        height: 50px;
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 24px;
+        margin-right: 15px;
+    }
+    .icon-box.primary {
+        background-color: #e7f1ff;
+        color: #0d6efd;
+    }
+    .icon-box.success {
+        background-color: #d4edda;
+        color: #198754;
+    }
+    .icon-box.warning {
+        background-color: #fff3cd;
+        color: #ffc107;
+    }
+    .icon-box.info {
+        background-color: #cff4fc;
+        color: #0dcaf0;
+    }
+    .btn-custom {
+        padding: 10px 25px;
+        border-radius: 8px;
+        font-weight: 500;
+        transition: all 0.3s;
+    }
+    .export-card {
+        background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+        color: white;
+        border: none;
+    }
+    html {
+        scroll-behavior: smooth;
+    }
+    .settings-card:target {
+        animation: highlight 1s ease-out;
+    }
+    @keyframes highlight {
+        0% {
+            box-shadow: 0 0 0 0 rgba(102, 126, 234, 0.7);
+        }
+        50% {
+            box-shadow: 0 0 20px 10px rgba(102, 126, 234, 0.4);
+        }
+        100% {
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h1 class="mb-1"><i class="fas fa-cog text-primary"></i> Settings</h1>
+                    <p class="text-muted">Manage your account settings and preferences</p>
+                </div>
+                <a href="{% url 'admin_dashboard:dashboard' %}" class="btn btn-outline-secondary">
+                    <i class="fas fa-arrow-left"></i> Back to Dashboard
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Messages -->
+    {% if messages %}
+        {% for message in messages %}
+        <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+            {{ message }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+        {% endfor %}
+    {% endif %}
+
+    <div class="row">
+        <!-- Left Column -->
+        <div class="col-lg-6">
+            <!-- Password Change Card -->
+            <div class="card settings-card" id="password">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">
+                        <i class="fas fa-key"></i> Change Password
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <form method="post" action="{% url 'admin_dashboard:change_password' %}">
+                        {% csrf_token %}
+                        <div class="mb-3">
+                            {{ password_form.old_password.label_tag }}
+                            {{ password_form.old_password }}
+                            {% if password_form.old_password.errors %}
+                                <div class="text-danger small mt-1">{{ password_form.old_password.errors }}</div>
+                            {% endif %}
+                        </div>
+                        <div class="mb-3">
+                            {{ password_form.new_password1.label_tag }}
+                            {{ password_form.new_password1 }}
+                            <small class="text-muted d-block mt-1">
+                                Password must be at least 8 characters long
+                            </small>
+                            {% if password_form.new_password1.errors %}
+                                <div class="text-danger small mt-1">{{ password_form.new_password1.errors }}</div>
+                            {% endif %}
+                        </div>
+                        <div class="mb-3">
+                            {{ password_form.new_password2.label_tag }}
+                            {{ password_form.new_password2 }}
+                            {% if password_form.new_password2.errors %}
+                                <div class="text-danger small mt-1">{{ password_form.new_password2.errors }}</div>
+                            {% endif %}
+                        </div>
+                        <button type="submit" class="btn btn-primary btn-custom">
+                            <i class="fas fa-save"></i> Update Password
+                        </button>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Two-Factor Authentication Card -->
+            <div class="card settings-card">
+                <div class="card-header bg-success text-white">
+                    <h5 class="mb-0">
+                        <i class="fas fa-shield-alt"></i> Two-Factor Authentication
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="d-flex align-items-start">
+                        <div class="icon-box success">
+                            <i class="fas fa-lock"></i>
+                        </div>
+                        <div class="flex-grow-1">
+                            <div class="setting-label">Enable 2FA</div>
+                            <div class="setting-description">
+                                Add an extra layer of security to your account
+                            </div>
+                            <form method="post" action="{% url 'admin_dashboard:update_preferences' %}" id="twoFactorForm">
+                                {% csrf_token %}
+                                <input type="hidden" name="theme" value="{{ preferences.theme }}">
+                                <input type="hidden" name="email_notifications" value="{{ preferences.email_notifications|yesno:'true,false' }}">
+                                <input type="hidden" name="activity_notifications" value="{{ preferences.activity_notifications|yesno:'true,false' }}">
+                                <input type="hidden" name="weekly_reports" value="{{ preferences.weekly_reports|yesno:'true,false' }}">
+                                
+                                <label class="switch">
+                                    <input type="checkbox" 
+                                           name="two_factor_enabled" 
+                                           {% if user.two_factor_enabled %}checked{% endif %}
+                                           onchange="this.form.submit()">
+                                    <span class="slider"></span>
+                                </label>
+                                <span class="ms-2">
+                                    {% if user.two_factor_enabled %}
+                                        <span class="badge bg-success">Enabled</span>
+                                    {% else %}
+                                        <span class="badge bg-secondary">Disabled</span>
+                                    {% endif %}
+                                </span>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Theme Settings Card -->
+            <div class="card settings-card" id="theme">
+                <div class="card-header bg-info text-white">
+                    <h5 class="mb-0">
+                        <i class="fas fa-palette"></i> Theme Settings
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <form method="post" action="{% url 'admin_dashboard:update_preferences' %}">
+                        {% csrf_token %}
+                        <input type="hidden" name="email_notifications" value="{{ preferences.email_notifications|yesno:'true,false' }}">
+                        <input type="hidden" name="activity_notifications" value="{{ preferences.activity_notifications|yesno:'true,false' }}">
+                        <input type="hidden" name="weekly_reports" value="{{ preferences.weekly_reports|yesno:'true,false' }}">
+                        <input type="hidden" name="two_factor_enabled" value="{{ user.two_factor_enabled|yesno:'true,false' }}">
+                        
+                        <div class="mb-3">
+                            <label class="form-label">Select Theme</label>
+                            {{ preferences_form.theme }}
+                            <small class="text-muted d-block mt-1">
+                                Choose your preferred theme appearance
+                            </small>
+                        </div>
+                        <button type="submit" class="btn btn-info text-white btn-custom">
+                            <i class="fas fa-save"></i> Save Theme
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Right Column -->
+        <div class="col-lg-6">
+            <!-- Notifications Settings Card -->
+            <div class="card settings-card" id="notifications">
+                <div class="card-header bg-warning text-dark">
+                    <h5 class="mb-0">
+                        <i class="fas fa-bell"></i> Notification Settings
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <form method="post" action="{% url 'admin_dashboard:update_preferences' %}">
+                        {% csrf_token %}
+                        <input type="hidden" name="theme" value="{{ preferences.theme }}">
+                        <input type="hidden" name="two_factor_enabled" value="{{ user.two_factor_enabled|yesno:'true,false' }}">
+                        
+                        <div class="setting-item">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <div class="setting-label">
+                                        <i class="fas fa-envelope me-2"></i>Email Notifications
+                                    </div>
+                                    <div class="setting-description">
+                                        Receive email updates about your account
+                                    </div>
+                                </div>
+                                <label class="switch">
+                                    <input type="checkbox" 
+                                           name="email_notifications"
+                                           {% if preferences.email_notifications %}checked{% endif %}>
+                                    <span class="slider"></span>
+                                </label>
+                            </div>
+                        </div>
+
+                        <div class="setting-item">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <div class="setting-label">
+                                        <i class="fas fa-chart-line me-2"></i>Activity Notifications
+                                    </div>
+                                    <div class="setting-description">
+                                        Get notified about important activities
+                                    </div>
+                                </div>
+                                <label class="switch">
+                                    <input type="checkbox" 
+                                           name="activity_notifications"
+                                           {% if preferences.activity_notifications %}checked{% endif %}>
+                                    <span class="slider"></span>
+                                </label>
+                            </div>
+                        </div>
+
+                        <div class="setting-item">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <div class="setting-label">
+                                        <i class="fas fa-calendar-week me-2"></i>Weekly Reports
+                                    </div>
+                                    <div class="setting-description">
+                                        Receive weekly summary reports
+                                    </div>
+                                </div>
+                                <label class="switch">
+                                    <input type="checkbox" 
+                                           name="weekly_reports"
+                                           {% if preferences.weekly_reports %}checked{% endif %}>
+                                    <span class="slider"></span>
+                                </label>
+                            </div>
+                        </div>
+
+                        <div class="mt-3">
+                            <button type="submit" class="btn btn-warning btn-custom">
+                                <i class="fas fa-save"></i> Save Notifications
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- History Search Card -->
+            <div class="card settings-card">
+                <div class="card-header bg-secondary text-white">
+                    <h5 class="mb-0">
+                        <i class="fas fa-history"></i> Activity History
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="d-flex align-items-start mb-3">
+                        <div class="icon-box primary">
+                            <i class="fas fa-search"></i>
+                        </div>
+                        <div class="flex-grow-1">
+                            <div class="setting-label">Search Your History</div>
+                            <div class="setting-description">
+                                Browse and search through your activity history
+                            </div>
+                        </div>
+                    </div>
+                    <a href="{% url 'admin_dashboard:history' %}" class="btn btn-secondary btn-custom w-100">
+                        <i class="fas fa-search"></i> View History
+                    </a>
+                </div>
+            </div>
+
+            <!-- Data Export Card -->
+            <div class="card settings-card export-card" id="export">
+                <div class="card-header border-0">
+                    <h5 class="mb-0 text-white">
+                        <i class="fas fa-download"></i> Export Your Data
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <form method="post" action="{% url 'admin_dashboard:export_data' %}">
+                        {% csrf_token %}
+                        <div class="mb-3">
+                            <label class="form-label text-white">Data Type</label>
+                            <select name="data_type" class="form-select">
+                                <option value="all">All Data</option>
+                                <option value="activities">Activity History</option>
+                                <option value="searches">Search History</option>
+                                <option value="predictions">Prediction History</option>
+                                <option value="molecules">Viewed Molecules</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label text-white">Export Format</label>
+                            <select name="export_format" class="form-select">
+                                <option value="json">JSON</option>
+                                <option value="csv">CSV</option>
+                                <option value="excel">Excel (XLSX)</option>
+                            </select>
+                        </div>
+                        <div class="row mb-3">
+                            <div class="col-6">
+                                <label class="form-label text-white">From Date</label>
+                                <input type="date" name="start_date" class="form-control">
+                            </div>
+                            <div class="col-6">
+                                <label class="form-label text-white">To Date</label>
+                                <input type="date" name="end_date" class="form-control">
+                            </div>
+                        </div>
+                        <button type="submit" class="btn btn-light btn-custom w-100">
+                            <i class="fas fa-download"></i> Download Data
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Account Information Card -->
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="card settings-card">
+                <div class="card-header bg-dark text-white">
+                    <h5 class="mb-0">
+                        <i class="fas fa-user"></i> Account Information
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-4">
+                            <strong><i class="fas fa-user-circle text-primary"></i> Username:</strong>
+                            <p class="mb-0">{{ user.username }}</p>
+                        </div>
+                        <div class="col-md-4">
+                            <strong><i class="fas fa-envelope text-success"></i> Email:</strong>
+                            <p class="mb-0">{{ user.email }}</p>
+                        </div>
+                        <div class="col-md-4">
+                            <strong><i class="fas fa-calendar text-info"></i> Member Since:</strong>
+                            <p class="mb-0">{{ user.date_joined|date:"F d, Y" }}</p>
+                        </div>
+                    </div>
+                    <div class="row mt-3">
+                        <div class="col-md-4">
+                            <strong><i class="fas fa-shield-alt text-warning"></i> Role:</strong>
+                            <p class="mb-0">
+                                <span class="badge bg-primary">{{ user.get_role_display }}</span>
+                            </p>
+                        </div>
+                        <div class="col-md-4">
+                            <strong><i class="fas fa-check-circle text-success"></i> Email Verified:</strong>
+                            <p class="mb-0">
+                                {% if user.email_verified %}
+                                    <span class="badge bg-success">Yes</span>
+                                {% else %}
+                                    <span class="badge bg-warning">No</span>
+                                {% endif %}
+                            </p>
+                        </div>
+                        <div class="col-md-4">
+                            <strong><i class="fas fa-clock text-secondary"></i> Last Activity:</strong>
+                            <p class="mb-0">{{ user.last_activity|timesince }} ago</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

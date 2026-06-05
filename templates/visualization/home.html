@@ -1,0 +1,918 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Home - Molecular Database{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="mx-auto" style="max-width: 1200px;">
+    <!-- Page Header -->
+    <div class="row mb-4 mt-5">
+        <div class="col-12 text-center">
+            <h1 class="display-4 fw-bold" style="color: var(--primary-color);">
+                Welcome to DD3S
+            </h1>
+            <p class="lead text-muted mb-4">
+                Explore and analyze molecular structures with powerful AI-driven tools
+            </p>
+        </div>
+    </div>
+
+    <!-- Feature Cards Section -->
+    <div class="row mb-5">
+        <div class="col-12 mb-4">
+            <h2 class="fw-bold" style="color: var(--primary-color);">
+                Key Features
+            </h2>
+        </div>
+        <div class="col-md-4 mb-4">
+            <div class="card h-100 shadow-sm feature-card">
+                <div class="card-body p-4">
+                    <div class="d-flex align-items-center mb-3">
+                        <div class="feature-icon me-3">
+                            <i class="fas fa-cube fa-3x" style="color: var(--primary-color);"></i>
+                        </div>
+                        <h5 class="fw-bold mb-0">3D Visualization</h5>
+                    </div>
+                    <p class="text-muted mb-0">
+                        Interactive molecular structure viewer with advanced rendering capabilities
+                    </p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-4 mb-4">
+            <div class="card h-100 shadow-sm feature-card">
+                <div class="card-body p-4">
+                    <div class="d-flex align-items-center mb-3">
+                        <div class="feature-icon me-3">
+                            <i class="fas fa-brain fa-3x text-success"></i>
+                        </div>
+                        <h5 class="fw-bold mb-0">AI Predictions</h5>
+                    </div>
+                    <p class="text-muted mb-0">
+                        Machine learning models for property prediction and molecular analysis
+                    </p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-4 mb-4">
+            <div class="card h-100 shadow-sm feature-card">
+                <div class="card-body p-4">
+                    <div class="d-flex align-items-center mb-3">
+                        <div class="feature-icon me-3">
+                            <i class="fas fa-database fa-3x text-info"></i>
+                        </div>
+                        <h5 class="fw-bold mb-0">PDB Integration</h5>
+                    </div>
+                    <p class="text-muted mb-0">
+                        Direct access to Protein Data Bank with seamless data integration
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tools & Resources Section -->
+    <div class="row mb-5">
+        <div class="col-12 mb-4">
+            <h2 class="fw-bold" style="color: var(--primary-color);">
+                Tools & Resources
+            </h2>
+            <p class="text-muted">Advanced tools for molecular analysis and drug discovery</p>
+        </div>
+        <div class="col-md-6 mb-4">
+            <div class="card h-100 border-0 shadow-sm feature-card">
+                <div class="card-body p-4">
+                    <div class="d-flex align-items-start mb-3">
+                        <div class="feature-icon bg-primary-light me-3">
+                            <i class="fas fa-search fa-2x text-primary"></i>
+                        </div>
+                        <div>
+                            <h5 class="card-title fw-bold mb-2">Advanced Search</h5>
+                            <p class="text-muted mb-3">
+                                Search across {{ total_molecules|default:"14,000+" }} molecules by name, PDB ID, SMILES notation, gene targets, or molecular properties. Our powerful search engine delivers instant results.
+                            </p>
+                        </div>
+                    </div>
+                    <a href="{% url 'visualization:search' %}" class="btn btn-primary">
+                        <i class="fas fa-search me-2"></i> Start Searching
+                    </a>
+                    <div class="mt-3 pt-3 border-top">
+                        <small class="text-muted">
+                            <i class="fas fa-database me-1" style="color: var(--primary-color);"></i> {{ total_molecules|default:"14,000+" }} molecules available
+                            <span class="ms-3">
+                                <i class="fas fa-filter me-1" style="color: var(--primary-color);"></i> Advanced filtering
+                            </span>
+                        </small>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6 mb-4">
+            <div class="card h-100 border-0 shadow-sm feature-card">
+                <div class="card-body p-4">
+                    <div class="d-flex align-items-start mb-3">
+                        <div class="feature-icon bg-success-light me-3">
+                            <i class="fas fa-pencil-ruler fa-2x text-success"></i>
+                        </div>
+                        <div>
+                            <h5 class="card-title fw-bold mb-2">Molecule Designer</h5>
+                            <p class="text-muted mb-3">
+                                Design and visualize molecular structures with our interactive 3D design tool. Create custom molecules and analyze their drug-like properties in real-time.
+                            </p>
+                        </div>
+                    </div>
+                    <a href="{% url 'visualization:design' %}" class="btn btn-success">
+                        <i class="fas fa-pencil-ruler me-2"></i> Launch Designer
+                    </a>
+                    <div class="mt-3 pt-3 border-top">
+                        <small class="text-muted">
+                            <i class="fas fa-cube me-1" style="color: var(--primary-color);"></i> Interactive 3D viewer
+                            <span class="ms-3">
+                                <i class="fas fa-calculator me-1" style="color: #28a745;"></i> Real-time analysis
+                            </span>
+                        </small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Statistics Section -->
+    {% if latest_import %}
+    <!-- Dynamic Database Statistics Section -->
+    <div class="row mb-5">
+        <div class="col-12 mb-4">
+            <div class="d-flex justify-content-between align-items-center">
+                <h2 class="fw-bold mb-0" style="color: var(--primary-color);">
+                    Live Database Analytics
+                </h2>
+                <button id="refreshStatsBtn" class="btn btn-sm btn-outline-primary">
+                    <i class="fas fa-sync-alt me-1"></i> Refresh
+                </button>
+            </div>
+        </div>
+
+        <!-- Main Statistics Cards -->
+        <div class="col-lg-3 col-md-6 mb-4">
+            <div class="card h-100 border-0 shadow-sm stat-card primary">
+                <div class="card-body text-white">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div style="flex: 1;">
+                            <p class="text-white mb-2 text-uppercase small fw-bold" style="font-size: 0.75rem; opacity: 0.9;">Total Molecules</p>
+                            <h2 class="fw-bold mb-0" id="totalMolecules" style="font-size: 2rem;">
+                                <span class="loading-spinner"></span>
+                            </h2>
+                        </div>
+                        <div class="stat-icon" style="opacity: 0.3;">
+                            <i class="fas fa-database fa-2x"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-3 col-md-6 mb-4">
+            <div class="card h-100 border-0 shadow-sm stat-card success">
+                <div class="card-body text-white">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div style="flex: 1;">
+                            <p class="text-white mb-2 text-uppercase small fw-bold" style="font-size: 0.75rem; opacity: 0.9;">Active Compounds</p>
+                            <h2 class="fw-bold mb-0" id="activeCount" style="font-size: 2rem;">
+                                <span class="loading-spinner"></span>
+                            </h2>
+                            <small class="text-white" style="opacity: 0.8;" id="activePercent"></small>
+                        </div>
+                        <div class="stat-icon" style="opacity: 0.3;">
+                            <i class="fas fa-check-circle fa-2x"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-3 col-md-6 mb-4">
+            <div class="card h-100 border-0 shadow-sm stat-card danger">
+                <div class="card-body text-white">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div style="flex: 1;">
+                            <p class="text-white mb-2 text-uppercase small fw-bold" style="font-size: 0.75rem; opacity: 0.9;">Inactive Compounds</p>
+                            <h2 class="fw-bold mb-0" id="inactiveCount" style="font-size: 2rem;">
+                                <span class="loading-spinner"></span>
+                            </h2>
+                            <small class="text-white" style="opacity: 0.8;" id="inactivePercent"></small>
+                        </div>
+                        <div class="stat-icon" style="opacity: 0.3;">
+                            <i class="fas fa-times-circle fa-2x"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-3 col-md-6 mb-4">
+            <div class="card h-100 border-0 shadow-sm stat-card info">
+                <div class="card-body text-white">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div style="flex: 1;">
+                            <p class="text-white mb-2 text-uppercase small fw-bold" style="font-size: 0.75rem; opacity: 0.9;">Gene Targets</p>
+                            <h2 class="fw-bold mb-0" id="geneTargetCount" style="font-size: 2rem;">
+                                <span class="loading-spinner"></span>
+                            </h2>
+                            <small class="text-white" style="opacity: 0.8;">Multi-target coverage</small>
+                        </div>
+                        <div class="stat-icon" style="opacity: 0.3;">
+                            <i class="fas fa-dna fa-2x"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Gene Target Distribution -->
+        <div class="col-lg-6 mb-4">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-header border-0 py-3" style="background-color: var(--card-bg, #ffffff);">
+                    <h5 class="mb-0 fw-bold" style="color: var(--text-color, #212529);">
+                        <i class="fas fa-chart-bar text-primary me-2"></i>
+                        Gene Target Distribution
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div id="geneDistribution" style="max-height: 300px; overflow-y: auto;">
+                        <div class="text-center py-5">
+                            <span class="loading-spinner"></span>
+                            <p class="mt-3" style="color: var(--text-muted, #6c757d);">Loading distribution data...</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- AI Insights Card -->
+        <div class="col-lg-6 mb-4">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-header border-0 py-3" style="background-color: var(--card-bg, #ffffff);">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0 fw-bold" style="color: var(--text-color, #212529);">
+                            <i class="fas fa-brain me-2"></i> AI Insights
+                        </h5>
+                        <button id="refreshInsightsBtn" class="btn btn-sm btn-outline-success" style="width: 38px; height: 38px; padding: 0; display: flex; align-items: center; justify-content: center;">
+                            <i class="fas fa-sync-alt"></i>
+                        </button>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div id="aiInsightsSummary" class="mb-3">
+                        <small style="color: var(--text-muted, #6c757d);">Snapshot: no summary available yet.</small>
+                    </div>
+                    <div id="aiInsights" style="height: 260px; overflow-y: auto;">
+                        <div class="text-center py-4">
+                            <i class="fas fa-robot fa-3x mb-3" style="color: var(--text-muted, #6c757d);"></i>
+                            <p style="color: var(--text-muted, #6c757d);">Analyzing your data...</p>
+                        </div>
+                    </div>
+                    <button id="generateInsightsBtn" class="btn btn-sm btn-outline-primary w-100 mt-3" style="border: 2px solid #0d6efd; font-weight: 500;">
+                        <i class="fas fa-magic me-1"></i> Generate Insights
+                    </button>
+                    <small class="d-block mt-2 text-center" style="color: var(--text-muted, #6c757d);">Powered by Gemma3:4b AI</small>
+                </div>
+            </div>
+        </div>
+
+        <!-- Latest Import Info -->
+        {% if latest_import %}
+        <div class="col-12">
+            <div class="alert alert-info border-0 shadow-sm mb-0">
+                <div class="d-flex align-items-center">
+                    <i class="fas fa-info-circle fa-2x me-3"></i>
+                    <div class="flex-grow-1">
+                        <strong>Latest Import:</strong> 
+                        <span id="importDate">{{ latest_import.import_date|date:"F d, Y \a\t h:i A" }}</span>
+                        <span class="ms-3">
+                            <i class="fas fa-check-circle text-success me-1"></i>
+                            <span id="importCreated">{{ latest_import.created_count }}</span> created,
+                            <span id="importUpdated">{{ latest_import.updated_count }}</span> updated
+                        </span>
+                    </div>
+                    <span class="badge bg-success">{{ latest_import.error_count }} errors</span>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+
+    <style>
+        /* Tools & Resources Cards */
+        .feature-icon {
+            width: 60px;
+            height: 60px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 12px;
+        }
+        
+        .bg-primary-light {
+            background-color: rgba(99, 102, 241, 0.1);
+        }
+        
+        .bg-success-light {
+            background-color: rgba(40, 167, 69, 0.1);
+        }
+
+        .stat-card {
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            overflow: hidden;
+            color: #fff;
+        }
+        
+        .stat-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.18) !important;
+        }
+        #aiInsights::-webkit-scrollbar {
+            width: 5px;
+        }
+        #aiInsights::-webkit-scrollbar-thumb {
+            background: #ccc;
+            border-radius: 10px;
+        }
+        /* Color variants for stat cards */
+        .stat-card.primary { background: linear-gradient(135deg, #0EA5A4 0%, #0369A1 100%); }
+        .stat-card.success { background: linear-gradient(135deg, #16A34A 0%, #65A30D 100%); }
+        .stat-card.danger  { background: linear-gradient(135deg, #FB7185 0%, #F97316 100%); }
+        .stat-card.info    { background: linear-gradient(135deg, #7C3AED 0%, #06B6D4 100%); }
+
+        .stat-icon {
+            opacity: 0.22;
+            color: rgba(255,255,255,0.95);
+        }
+        
+        .stat-card .text-white { color: rgba(255,255,255,0.98) !important; }
+
+        .loading-spinner {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255,255,255,0.28);
+            border-radius: 50%;
+            border-top-color: rgba(255,255,255,0.9);
+            animation: spin 1s ease-in-out infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        
+        .progress-bar-animated {
+            animation: progress-bar-stripes 1s linear infinite;
+        }
+        
+        @keyframes progress-bar-stripes {
+            0% { background-position: 1rem 0; }
+            100% { background-position: 0 0; }
+        }
+        
+        .gene-bar {
+            transition: width 0.5s ease;
+        }
+        /* Light mode stat cards */
+        .stat-card,
+        .stat-card * {
+            color: var(--text-color, #000000) !important;
+        }
+
+        .stat-card .text-white,
+        .stat-card .text-white * {
+            color: var(--text-color, #000000) !important;
+        }
+
+        .stat-card small,
+        .stat-card p {
+            opacity: 1 !important;
+        }
+
+        /* Light mode backgrounds */
+        .stat-card.primary   { background: #e3f2fd; }
+        .stat-card.success   { background: #e8f5e9; }
+        .stat-card.danger    { background: #ffebee; }
+        .stat-card.info      { background: #f3e5f5; }
+
+        /* Dark mode backgrounds */
+        [data-theme="dark"] .stat-card.primary,
+        .theme-dark .stat-card.primary {
+            background: #1e3a5f !important;
+        }
+
+        [data-theme="dark"] .stat-card.success,
+        .theme-dark .stat-card.success {
+            background: #1e4620 !important;
+        }
+
+        [data-theme="dark"] .stat-card.danger,
+        .theme-dark .stat-card.danger {
+            background: #5f1e1e !important;
+        }
+
+        [data-theme="dark"] .stat-card.info,
+        .theme-dark .stat-card.info {
+            background: #3a1e5f !important;
+        }
+
+        /* Dark mode text colors */
+        [data-theme="dark"] .stat-card,
+        [data-theme="dark"] .stat-card *,
+        .theme-dark .stat-card,
+        .theme-dark .stat-card * {
+            color: #ffffff !important;
+        }
+
+        .stat-card {
+            border: 1px solid var(--border-color, rgba(0,0,0,0.12)) !important;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+        }
+
+        .stat-icon {
+            color: var(--text-color, rgba(0,0,0,0.35));
+            opacity: 0.7 !important;
+        }
+
+        [data-theme="dark"] .stat-icon,
+        .theme-dark .stat-icon {
+            color: rgba(255,255,255,0.5) !important;
+        }
+
+        /* AI Insights Formatting */
+        .insight-container {
+            background: #f8f9fa !important;
+            border-left: 4px solid var(--primary-color) !important;
+        }
+        
+        .insight-header {
+            color: var(--primary-color);
+            font-size: 1.1rem;
+        }
+        
+        .insight-body {
+            color: #333;
+            line-height: 1.8;
+        }
+        
+        .insight-body h1, .insight-body h2 {
+            color: var(--primary-color);
+            font-size: 1.3rem;
+            font-weight: 600;
+            margin-top: 1rem;
+            margin-bottom: 0.75rem;
+        }
+        
+        .insight-body h3, .insight-body h4 {
+            color: #495057;
+            font-size: 1.1rem;
+            font-weight: 600;
+            margin-top: 0.75rem;
+            margin-bottom: 0.5rem;
+        }
+        
+        .insight-body p {
+            margin-bottom: 0.75rem;
+            text-align: justify;
+        }
+        
+        .insight-body strong {
+            color: #000;
+            font-weight: 600;
+        }
+        
+        .insight-body ul, .insight-body ol {
+            margin-left: 1.5rem;
+            margin-bottom: 0.75rem;
+        }
+        
+        .insight-body li {
+            margin-bottom: 0.5rem;
+            line-height: 1.6;
+        }
+        
+        .insight-body code {
+            background: #e9ecef;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-size: 0.9em;
+        }
+        
+        .insight-body blockquote {
+            border-left: 3px solid var(--primary-color);
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #6c757d;
+            font-style: italic;
+        }
+    </style>
+
+    <script>
+        // Load statistics on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            loadDatabaseStats();
+        });
+
+        // Refresh button
+        document.getElementById('refreshStatsBtn').addEventListener('click', function() {
+            const icon = this.querySelector('i');
+            icon.classList.add('fa-spin');
+            loadDatabaseStats();
+            setTimeout(() => icon.classList.remove('fa-spin'), 1000);
+        });
+
+        // Refresh AI Insights button
+        document.getElementById('refreshInsightsBtn').addEventListener('click', function() {
+            const icon = this.querySelector('i');
+            icon.classList.add('fa-spin');
+            // Trigger the generate insights button
+            document.getElementById('generateInsightsBtn').click();
+            setTimeout(() => icon.classList.remove('fa-spin'), 1000);
+        });
+
+        // Generate AI Insights
+        document.getElementById('generateInsightsBtn').addEventListener('click', async function() {
+            const btn = this;
+            const insightsDiv = document.getElementById('aiInsights');
+
+            btn.disabled = true;
+            btn.innerHTML = '<span class="loading-spinner me-1"></span> Generating...';
+
+            // Get current stats
+            const stats = {
+                total: parseInt(document.getElementById('totalMolecules').textContent) || 0,
+                active: parseInt(document.getElementById('activeCount').textContent) || 0,
+                inactive: parseInt(document.getElementById('inactiveCount').textContent) || 0,
+                gene_distribution: []
+            };
+            updateInsightSummary(stats, 'Generating fresh insight');
+            
+            try {
+                const response = await fetch("{% url 'visualization:get_ai_insights' %}", {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': '{{ csrf_token }}'
+                    },
+                    body: JSON.stringify({ stats: stats })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    insightsDiv.innerHTML = `
+                        <div class="alert alert-light mb-0 insight-container">
+                            <div class="insight-header mb-3">
+                                <i class="fas fa-lightbulb text-warning me-2"></i>
+                                <strong>Insight:</strong>
+                            </div>
+                            <div class="insight-body">${data.insight}</div>
+                            <small class="text-muted d-block mt-3 pt-2 border-top">Source: ${data.source}</small>
+                        </div>
+                    `;
+                } else {
+                    insightsDiv.innerHTML = `<div class="alert alert-danger mb-0">${data.error}</div>`;
+                }
+            } catch (error) {
+                insightsDiv.innerHTML = `<div class="alert alert-danger mb-0">Failed to generate insights</div>`;
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fas fa-magic me-1"></i> Regenerate';
+            }
+        });
+
+        // Load database statistics
+        async function loadDatabaseStats() {
+            try {
+                const response = await fetch("{% url 'visualization:get_database_stats' %}");
+                const data = await response.json();
+                
+                if (data.success) {
+                    const stats = data.statistics;
+                    
+                    // Update main counters
+                    document.getElementById('totalMolecules').textContent = stats.total.toLocaleString();
+                    document.getElementById('activeCount').textContent = stats.active.toLocaleString();
+                    document.getElementById('inactiveCount').textContent = stats.inactive.toLocaleString();
+                    document.getElementById('geneTargetCount').textContent = stats.gene_distribution.length;
+                    
+                    // Calculate percentages
+                    const activePercent = ((stats.active / stats.total) * 100).toFixed(1);
+                    const inactivePercent = ((stats.inactive / stats.total) * 100).toFixed(1);
+                    document.getElementById('activePercent').textContent = `${activePercent}% of total`;
+                    document.getElementById('inactivePercent').textContent = `${inactivePercent}% of total`;
+                    
+                    // Update gene distribution
+                    const geneDistDiv = document.getElementById('geneDistribution');
+                    let geneHtml = '';
+                    
+                    stats.gene_distribution.forEach(gene => {
+                        const percentage = ((gene.count / stats.total) * 100).toFixed(1);
+                        const activePerc = ((gene.active / gene.count) * 100).toFixed(0);
+                        
+                        geneHtml += `
+                            <div class="mb-3">
+                                <div class="d-flex justify-content-between mb-1">
+                                    <span class="fw-bold text-uppercase">${gene.gene_target}</span>
+                                    <span class="text-muted">${gene.count.toLocaleString()} (${percentage}%)</span>
+                                </div>
+                                <div class="progress" style="height: 25px;">
+                                    <div class="progress-bar bg-success gene-bar" role="progressbar" 
+                                         style="width: ${activePerc}%" 
+                                         title="${gene.active} active">
+                                        ${gene.active}
+                                    </div>
+                                    <div class="progress-bar bg-secondary gene-bar" role="progressbar" 
+                                         style="width: ${100 - activePerc}%" 
+                                         title="${gene.inactive} inactive">
+                                        ${gene.inactive}
+                                    </div>
+                                </div>
+                                <small class="text-muted">
+                                    ${gene.active} active • ${gene.inactive} inactive
+                                </small>
+                            </div>
+                        `;
+                    });
+                    
+                    geneDistDiv.innerHTML = geneHtml || '<p class="text-muted">No data available</p>';
+                    updateInsightSummary(stats, 'Latest snapshot');
+                }
+            } catch (error) {
+                console.error('Failed to load statistics:', error);
+            }
+        }
+
+        function updateInsightSummary(stats, note) {
+            const summaryEl = document.getElementById('aiInsightsSummary');
+            if (!summaryEl) return;
+            if (!stats || stats.total === undefined) {
+                summaryEl.innerHTML = '<small class="text-muted">Snapshot: data not available.</small>';
+                return;
+            }
+            const total = stats.total || 0;
+            const active = stats.active || 0;
+            const inactive = stats.inactive || 0;
+            const activePercent = total ? ((active / total) * 100).toFixed(1) : '0.0';
+            const inactivePercent = total ? ((inactive / total) * 100).toFixed(1) : '0.0';
+            const noteText = note ? ` • ${note}` : '';
+            summaryEl.innerHTML = `
+                <div class="small text-muted">
+                    Total <strong>${total.toLocaleString()}</strong> • Active <strong>${active.toLocaleString()}</strong> (${activePercent}%) • Inactive <strong>${inactive.toLocaleString()}</strong> (${inactivePercent}%)${noteText}
+                </div>`;
+        }
+    </script>
+
+    {% endif %}
+
+    <!-- Featured Molecules Section -->
+    {% if featured_molecules %}
+    <div class="row mb-5 g-2">
+        <div class="col-12 mb-4">
+            <h2 class="fw-bold" style="color: var(--primary-color);">
+                Featured Molecules
+                <span class="badge bg-primary featured-count-badge">{{ featured_molecules|length }}</span>
+            </h2>
+            <p class="text-muted">Explore our curated collection of molecular compounds</p>
+        </div>
+
+        <!-- Advanced Search Bar -->
+        <div class="col-12 mb-4">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body p-4">
+                    <form id="homeSearchForm" onsubmit="return false;">
+                        <div class="row g-3">
+                            <div class="col-md-3">
+                                <label class="form-label small text-muted mb-1">Activity Status</label>
+                                <select class="form-select" id="filterStatus" onchange="filterMolecules()">
+                                    <option value="">All Status</option>
+                                    <option value="true">Active</option>
+                                    <option value="false">Inactive</option>
+                                </select>
+                            </div>
+                            <div class="col-md-3">
+                                <label class="form-label small text-muted mb-1">Gene Target</label>
+                                <select class="form-select" id="filterGeneTarget" onchange="filterMolecules()">
+                                    <option value="">All Targets</option>
+                                    {% for gene in gene_stats %}
+                                    <option value="{{ gene.gene_target }}">{{ gene.gene_target|upper }} ({{ gene.count }})</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label small text-muted mb-1">Search Query</label>
+                                <div class="input-group">
+                                    <input type="text" class="form-control" id="filterQuery" placeholder="Search molecules by name, PDB ID, or SMILES..." oninput="filterMolecules()">
+                                    <button type="button" class="btn btn-primary px-4" onclick="filterMolecules()">
+                                        <i class="fas fa-search me-2"></i> Filter
+                                    </button>
+                                    <button type="button" class="btn btn-outline-secondary" onclick="resetFilters()">
+                                        <i class="fas fa-times"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        {% for molecule in featured_molecules %}
+        <div class="col-md-6 col-lg-3 molecule-card-wrapper" 
+             data-active="{{ molecule.is_active|yesno:'true,false' }}"
+             data-gene="{{ molecule.gene_target|default:'' }}"
+             data-name="{{ molecule.name|default:'Unnamed Molecule' }}"
+             data-pdb="{{ molecule.pdb_id|default:'' }}"
+             data-smiles="{{ molecule.smiles|default:'' }}">
+            <div class="card h-100 shadow-sm molecule-card">
+                {% if molecule.image_2d %}
+                <img src="{{ molecule.image_2d.url }}" class="card-img-top" alt="{{ molecule.name }}" style="height: 180px; object-fit: contain; background-color: #f8f9fa; padding: 10px;">
+                {% else %}
+                <div class="card-img-top bg-light d-flex align-items-center justify-content-center" style="height: 180px;">
+                    <i class="fas fa-molecule fa-3x text-muted"></i>
+                </div>
+                {% endif %}
+                <div class="card-body">
+                    <h6 class="card-title fw-bold text-truncate" title="{{ molecule.name|default:'Unnamed Molecule' }}">
+                        {{ molecule.name|default:"Unnamed Molecule" }}
+                    </h6>
+                    <div class="mb-2">
+                        {% if molecule.pdb_id %}
+                        <span class="badge bg-primary">{{ molecule.pdb_id }}</span>
+                        {% endif %}
+                        {% if molecule.gene_target %}
+                        <span class="badge bg-info">{{ molecule.gene_target }}</span>
+                        {% endif %}
+                        {% if molecule.is_active %}
+                        <span class="badge bg-success">Active</span>
+                        {% else %}
+                        <span class="badge bg-secondary">Inactive</span>
+                        {% endif %}
+                    </div>
+                    {% if molecule.molecular_weight %}
+                    <p class="small text-muted mb-2">
+                        <strong>MW:</strong> {{ molecule.molecular_weight|floatformat:2 }} g/mol
+                    </p>
+                    {% endif %}
+                    <div class="mb-2">
+                        <small class="text-muted"><strong>SMILES:</strong></small>
+                        {% if molecule.smiles %}
+                        <p class="small font-monospace text-break text-muted mb-0" style="font-size: 0.7rem; line-height: 1.2; max-height: 2.4rem; overflow: hidden;" title="{{ molecule.smiles }}">
+                            {{ molecule.smiles|truncatechars:50 }}
+                        </p>
+                        {% else %}
+                        <p class="small text-muted fst-italic mb-0">Not available</p>
+                        {% endif %}
+                    </div>
+                </div>
+                <div class="card-footer bg-transparent border-top-0 pt-0">
+                    <a href="{% url 'visualization:molecule_detail' molecule.pk %}" class="btn btn-sm btn-primary w-100">
+                        <i class="fas fa-eye me-1"></i> View Details
+                    </a>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    <!-- Call to Action -->
+    {% if not user.is_authenticated %}
+    <div class="row mb-5">
+        <div class="col-12">
+            <div class="card shadow-sm" style="background-color: var(--primary-color);">
+                <div class="card-body text-center text-white py-5">
+                    <h3 class="fw-bold mb-3">Get Started Today</h3>
+                    <p class="lead mb-4">
+                        Join our community of researchers and explore the molecular world
+                    </p>
+                    <a href="{% url 'authentication:auth' %}" class="btn btn-light btn-lg">
+                        <i class="fas fa-user-plus me-2"></i> Create Account
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+    </div>
+</div>
+
+<script>
+    function filterMolecules() {
+        const statusEl = document.getElementById('filterStatus');
+        const geneTargetEl = document.getElementById('filterGeneTarget');
+        const queryEl = document.getElementById('filterQuery');
+        
+        if (!statusEl || !geneTargetEl || !queryEl) {
+            console.error('Filter elements not found');
+            return;
+        }
+        
+        const status = statusEl.value;
+        const geneTarget = geneTargetEl.value.toLowerCase();
+        const query = queryEl.value.toLowerCase();
+        
+        const moleculeCards = document.querySelectorAll('.molecule-card-wrapper');
+        let visibleCount = 0;
+        
+        moleculeCards.forEach(card => {
+            const cardStatus = card.dataset.active;
+            const cardGene = (card.dataset.gene || '').toLowerCase();
+            const cardName = (card.dataset.name || '').toLowerCase();
+            const cardPdb = (card.dataset.pdb || '').toLowerCase();
+            const cardSmiles = (card.dataset.smiles || '').toLowerCase();
+            
+            let show = true;
+            
+            // Filter by status
+            if (status && cardStatus !== status) {
+                show = false;
+            }
+            
+            // Filter by gene target
+            if (geneTarget && cardGene !== geneTarget) {
+                show = false;
+            }
+            
+            // Filter by search query
+            if (query && !cardName.includes(query) && !cardPdb.includes(query) && !cardSmiles.includes(query)) {
+                show = false;
+            }
+            
+            if (show) {
+                card.style.display = '';
+                visibleCount++;
+            } else {
+                card.style.display = 'none';
+            }
+        });
+        
+        const badge = document.querySelector('.featured-count-badge');
+        if (badge) {
+            badge.textContent = visibleCount;
+        }
+    }
+    
+    function resetFilters() {
+        const statusEl = document.getElementById('filterStatus');
+        const geneTargetEl = document.getElementById('filterGeneTarget');
+        const queryEl = document.getElementById('filterQuery');
+        
+        if (statusEl) statusEl.value = '';
+        if (geneTargetEl) geneTargetEl.value = '';
+        if (queryEl) queryEl.value = '';
+        
+        filterMolecules();
+    }
+    
+    // Ensure functions are available globally
+    window.filterMolecules = filterMolecules;
+    window.resetFilters = resetFilters;
+</script>
+
+<style>
+/* Feature Cards */
+.feature-card {
+    transition: all 0.3s ease;
+    border: 1px solid rgba(0,0,0,.125);
+}
+
+.feature-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 0.5rem 1.5rem rgba(0, 0, 0, 0.15) !important;
+}
+
+.feature-icon {
+    transition: transform 0.3s ease;
+}
+
+.feature-card:hover .feature-icon {
+    transform: scale(1.1);
+}
+
+/* Molecule Cards */
+.molecule-card {
+    transition: all 0.3s ease;
+    border: 1px solid rgba(0,0,0,.125);
+}
+
+.molecule-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15) !important;
+}
+
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .display-4 {
+        font-size: 2.5rem;
+    }
+}
+</style>
+{% endblock %}

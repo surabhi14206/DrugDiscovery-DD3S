@@ -1,0 +1,105 @@
+{% extends 'base.html' %}
+
+{% block title %}Account Connections{% endblock %}
+
+{% block extra_css %}
+<style>
+    body {
+        background-color: #0a0a0a !important;
+        min-height: 100vh;
+    }
+    
+    .connection-container {
+        max-width: 700px;
+        margin: 50px auto;
+    }
+    
+    .connection-container .card {
+        background-color: #1a1a1a !important;
+        border: 1px solid #333 !important;
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+    }
+    
+    .connection-container .card-body {
+        background-color: #1a1a1a !important;
+        padding: 2rem !important;
+    }
+    
+    .connection-container h2, .connection-container h3, .connection-container p {
+        color: #ffffff !important;
+    }
+    
+    .connection-container .text-muted {
+        color: #b0b0b0 !important;
+    }
+    
+    .social-account-item {
+        background-color: #2d2d2d;
+        border: 1px solid #444;
+        border-radius: 8px;
+        padding: 15px;
+        margin-bottom: 15px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+    
+    .social-account-item i {
+        font-size: 1.5rem;
+        margin-right: 10px;
+    }
+    
+    .btn-danger {
+        background-color: #dc3545 !important;
+        border-color: #dc3545 !important;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="connection-container">
+        <div class="card shadow-lg">
+            <div class="card-body p-4">
+                <div class="text-center mb-4">
+                    <i class="fas fa-link fa-3x text-primary mb-3"></i>
+                    <h2>Account Connections</h2>
+                    <p class="text-muted">Manage your connected social accounts</p>
+                </div>
+
+                {% if form.accounts %}
+                    <h5 class="mb-3" style="color: #fff;">Connected Accounts</h5>
+                    <form method="post">
+                        {% csrf_token %}
+                        {% for account in form.accounts %}
+                            <div class="social-account-item">
+                                <div>
+                                    {% if account.provider == 'google' %}
+                                        <i class="fab fa-google text-danger"></i>
+                                    {% elif account.provider == 'github' %}
+                                        <i class="fab fa-github text-light"></i>
+                                    {% endif %}
+                                    <strong style="color: #fff;">{{ account.get_provider_account }}</strong>
+                                </div>
+                                <button type="submit" name="account" value="{{ account.id }}" class="btn btn-danger btn-sm">
+                                    <i class="fas fa-unlink"></i> Disconnect
+                                </button>
+                            </div>
+                        {% endfor %}
+                    </form>
+                {% else %}
+                    <div class="text-center py-4">
+                        <p class="text-muted">No social accounts connected yet.</p>
+                    </div>
+                {% endif %}
+
+                <div class="text-center mt-4">
+                    <a href="{% url 'authentication:profile' %}" class="btn btn-secondary">
+                        <i class="fas fa-arrow-left"></i> Back to Profile
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

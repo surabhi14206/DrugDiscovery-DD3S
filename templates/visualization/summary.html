@@ -1,0 +1,209 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="container py-5">
+    <!-- Hero Header -->
+    <div class="summary-hero mb-4 p-4 p-lg-5 rounded-3">
+        <div class="d-flex align-items-start justify-content-between flex-column flex-lg-row gap-3">
+            <div>
+                <div class="d-flex align-items-center gap-2 mb-2 breadcrumb-chip">
+                    <a href="{% url 'visualization:search' %}{% if original_query %}?q={{ original_query|urlencode }}{% endif %}"
+                        class="text-decoration-none small fw-semibold breadcrumb-link">
+                        <i class="fas fa-chevron-left me-1"></i> Literature Search
+                    </a>
+                    <span class="breadcrumb-divider">/</span>
+                    <span class="breadcrumb-current">Summary</span>
+                </div>
+
+                <h1 class="fw-semibold text-dark mb-2" style="font-size: 1.8rem;">{{ title }}</h1>
+                {% if snippet %}
+                <p class="lead text-muted mb-2" style="font-size: 1rem;">{{ snippet }}</p>
+                {% endif %}
+                <div class="text-muted small text-truncate"><i class="fas fa-link me-1"></i> {{ url }}</div>
+            </div>
+
+            <div class="d-flex gap-2">
+                <a href="{% url 'visualization:search' %}{% if original_query %}?q={{ original_query|urlencode }}{% endif %}"
+                    class="btn btn-outline-secondary px-3">
+                    <i class="fas fa-arrow-left me-2"></i> Back
+                </a>
+                <a href="{{ url }}" target="_blank" class="btn btn-primary px-3" title="Open Link in New Tab">
+                    View Original Source <i class="fas fa-external-link-alt ms-2"></i>
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Content Card -->
+    <div class="row justify-content-center">
+        <div class="col-lg-10">
+            <div class="card shadow-sm border-0 rounded-3">
+                <div class="card-header bg-white p-4 border-0 d-flex align-items-center justify-content-between">
+                    <div>
+                        <span class="badge bg-primary text-white">AI Summary</span>
+                        <p class="text-muted small mb-0 mt-2">Generated automatically; verify against the original source.</p>
+                    </div>
+                    <span class="text-muted small">Powered by Ollama (gemma3:4b)</span>
+                </div>
+
+                <div class="card-body p-5">
+                    <!-- Loading State -->
+                    <div id="loading" class="text-center py-4">
+                        <div class="spinner-border text-primary mb-3" role="status" style="width: 2.5rem; height: 2.5rem;"></div>
+                        <p class="text-muted mb-0">Generating summary…</p>
+                    </div>
+
+                    <!-- Summary Content -->
+                    <div id="summary-content" style="display: none;">
+                        <div class="mb-2">
+                            <h5 class="fw-semibold mb-3 text-dark" style="font-size: 1.15rem;">Key Insights</h5>
+                            <div id="summary-text" class="text-dark professional-list"
+                                style="line-height: 1.7; font-size: 1rem;"></div>
+                        </div>
+
+                        <div class="alert alert-light border rounded-3 mt-4 mb-0">
+                            <div class="d-flex">
+                                <i class="fas fa-info-circle text-muted mt-1 me-3"></i>
+                                <small class="text-muted">
+                                    Generated automatically; always verify against the original source for decisions or citation.
+                                </small>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Error State -->
+                    <div id="error-message" class="text-center py-4" style="display: none;">
+                        <i class="fas fa-exclamation-triangle fa-2x text-warning mb-3"></i>
+                        <h6 class="text-dark">Could not generate summary</h6>
+                        <p class="mb-3 text-muted" id="error-text">Unable to read content from the source URL.</p>
+                        <button onclick="location.reload()" class="btn btn-outline-primary">Try Again</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const url = "{{ url }}";
+        const snippet = "{{ snippet|escapejs }}";
+        const title = "{{ title|escapejs }}";
+
+        if (!url) {
+            showError('No URL provided to summarize.');
+            return;
+        }
+
+        fetch('/api/summarize-paper/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': '{{ csrf_token }}'
+            },
+            body: JSON.stringify({
+                url: url,
+                title: title,
+                snippet: snippet
+            })
+        })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    const htmlContent = data.summary_html || data.summary;
+                    showSummary(htmlContent);
+                } else {
+                    showError(data.error || 'Failed to generate summary.');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                showError('Connection failed. Please check if Ollama is running.');
+            });
+    });
+
+    function showSummary(html) {
+        document.getElementById('loading').style.display = 'none';
+        document.getElementById('summary-content').style.display = 'block';
+        document.getElementById('summary-text').innerHTML = html;
+    }
+
+    function showError(message) {
+        document.getElementById('loading').style.display = 'none';
+        document.getElementById('error-message').style.display = 'block';
+        document.getElementById('error-text').innerText = message;
+    }
+</script>
+
+<style>
+    .summary-hero {
+        background: linear-gradient(135deg, #f5f7fb 0%, #eef2f7 100%);
+        border: 1px solid #e0e6ee;
+        box-shadow: 0 10px 30px rgba(17, 24, 39, 0.05);
+    }
+
+    .breadcrumb-chip {
+        background: rgba(255, 255, 255, 0.75);
+        border: 1px solid #d5deeb;
+        border-radius: 999px;
+        padding: 6px 12px;
+        color: #4a5568;
+    }
+
+    .breadcrumb-link {
+        color: #0d6efd;
+        transition: color 0.15s ease, text-decoration 0.15s ease;
+    }
+
+    .breadcrumb-link:hover {
+        color: #0b5ed7;
+        text-decoration: underline;
+    }
+
+    .breadcrumb-divider {
+        color: #94a3b8;
+        font-size: 0.9rem;
+    }
+
+    .breadcrumb-current {
+        color: #1f2937;
+        font-weight: 600;
+        font-size: 0.9rem;
+    }
+
+    .professional-list ul {
+        list-style: none;
+        padding-left: 0;
+        margin: 0;
+    }
+
+    .professional-list ul li {
+        position: relative;
+        padding-left: 35px;
+        margin-bottom: 16px;
+        line-height: 1.6;
+        color: #495057;
+    }
+
+    .professional-list ul li::before {
+        content: "\f00c";
+        font-family: "Font Awesome 5 Free";
+        font-weight: 900;
+        position: absolute;
+        left: 0;
+        color: #0d6efd;
+        font-size: 0.9rem;
+        top: 3px;
+    }
+
+    .professional-list ul li strong {
+        color: #2c3e50;
+        font-weight: 600;
+    }
+
+    .professional-list p {
+        margin-bottom: 0;
+    }
+</style>
+{% endblock %}

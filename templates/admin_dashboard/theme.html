@@ -1,0 +1,201 @@
+{% extends 'base.html' %}
+
+{% block title %}Theme Settings{% endblock %}
+
+{% block extra_css %}
+<style>
+    .theme-container {
+        max-width: 900px;
+        margin: 40px auto;
+    }
+    .theme-card {
+        border: none;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        border-radius: 15px;
+    }
+    .theme-header {
+        background: linear-gradient(135deg, #0d6efd 0%, #0a58ca 100%);
+        color: white;
+        padding: 30px;
+        border-radius: 15px 15px 0 0;
+        text-align: center;
+    }
+    
+    /* Recommended Theme - Use navbar color */
+    [data-theme="recomended"] .theme-header,
+    .theme-recomended .theme-header {
+        background: linear-gradient(135deg, #5a7a96 0%, #4a6a86 100%);
+    }
+    
+    /* Dark Theme - Use navbar color */
+    [data-theme="dark"] .theme-header,
+    .theme-dark .theme-header {
+        background: linear-gradient(135deg, #2d2d2d 0%, #1a1a1a 100%);
+    }
+    
+    .theme-header i {
+        font-size: 3rem;
+        margin-bottom: 15px;
+    }
+    .theme-option {
+        padding: 20px;
+        border: 2px solid #e0e0e0;
+        border-radius: 10px;
+        cursor: pointer;
+        transition: all 0.3s;
+        margin-bottom: 15px;
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+    }
+    .theme-option:hover {
+        border-color: #0d6efd;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    }
+    .theme-option.active {
+        border-color: #0d6efd;
+        background-color: #f0f4ff;
+    }
+    .theme-preview {
+        width: 100%;
+        height: 120px;
+        border-radius: 8px;
+        margin-bottom: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 2rem;
+        flex-shrink: 0;
+    }
+    .theme-preview.light {
+        background: linear-gradient(135deg, #ffffff 0%, #f5f5f5 100%);
+        color: #333;
+        border: 1px solid #dee2e6;
+    }
+    .theme-preview.recomended {
+        background: linear-gradient(135deg, #8ba3b8 0%, #6b8a9c 100%);
+        color: #fff;
+    }
+    .theme-preview.dark {
+        background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%);
+        color: #fff;
+        border: 1px solid #404040;
+    }
+
+    /* Dark mode contrast for theme cards */
+    .theme-dark .theme-option {
+        background: #1f232b;
+        border-color: #3a414c;
+        color: #e8edf5;
+        box-shadow: none;
+    }
+    .theme-dark .theme-option .text-muted {
+        color: #c5cedd !important;
+    }
+    .theme-dark .theme-option.active {
+        background: linear-gradient(135deg, #1f2c3a 0%, #151c26 100%);
+        border-color: #66b0ff;
+        box-shadow: 0 0 0 2px rgba(102, 176, 255, 0.25);
+    }
+    .theme-dark .theme-preview {
+        border-color: #3a414c;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="theme-container">
+    <div class="card theme-card">
+        <div class="theme-header">
+            <i class="fas fa-palette"></i>
+            <h2 class="mb-0">Theme Settings</h2>
+            <p class="mb-0">Choose your preferred theme</p>
+        </div>
+        <div class="card-body p-4">
+            {% if messages %}
+                {% for message in messages %}
+                <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                    {{ message }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+                {% endfor %}
+            {% endif %}
+
+            <form method="post">
+                {% csrf_token %}
+                
+                <div class="row justify-content-center g-3">
+                    <div class="col-12 col-sm-6 col-md-4">
+                        <label class="theme-option {% if preferences.theme == 'light' %}active{% endif %}">
+                            <input type="radio" name="theme" value="light" 
+                                   {% if preferences.theme == 'light' %}checked{% endif %} 
+                                   style="display: none;">
+                            <div class="theme-preview light">
+                                <i class="fas fa-sun"></i>
+                            </div>
+                            <div class="text-center fw-bold">Light Theme</div>
+                            <div class="text-center text-muted small">Bright and clear</div>
+                        </label>
+                    </div>
+                    
+                    <div class="col-12 col-sm-6 col-md-4">
+                        <label class="theme-option {% if preferences.theme == 'recomended' %}active{% endif %}">
+                            <input type="radio" name="theme" value="recomended" 
+                                   {% if preferences.theme == 'recomended' %}checked{% endif %} 
+                                   style="display: none;">
+                            <div class="theme-preview recomended">
+                                <i class="fas fa-star"></i>
+                            </div>
+                            <div class="text-center fw-bold">Recomended Theme</div>
+                            <div class="text-center text-muted small">Comfortable for eyes</div>
+                        </label>
+                    </div>
+                    
+                    <div class="col-12 col-sm-6 col-md-4">
+                        <label class="theme-option {% if preferences.theme == 'dark' %}active{% endif %}">
+                            <input type="radio" name="theme" value="dark" 
+                                   {% if preferences.theme == 'dark' %}checked{% endif %} 
+                                   style="display: none;">
+                            <div class="theme-preview dark">
+                                <i class="fas fa-moon"></i>
+                            </div>
+                            <div class="text-center fw-bold">Dark Theme</div>
+                            <div class="text-center text-muted small">Low light mode</div>
+                        </label>
+                    </div>
+                </div>
+
+                {% if not messages %}
+                <div class="alert alert-info mb-3">
+                    <i class="fas fa-info-circle"></i> 
+                    <strong>Note:</strong> Theme changes will take effect immediately after saving.
+                </div>
+                {% else %}
+                <div class="mb-3"></div>
+                {% endif %}
+
+                <div class="d-grid gap-2">
+                    <button type="submit" class="btn btn-primary btn-lg">
+                        <i class="fas fa-save"></i> Save Theme
+                    </button>
+                    <a href="{% url 'authentication:profile' %}" class="btn btn-outline-secondary">
+                        <i class="fas fa-arrow-left"></i> Back to Profile
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Add click event to theme options
+    document.querySelectorAll('.theme-option').forEach(option => {
+        option.addEventListener('click', function() {
+            document.querySelectorAll('.theme-option').forEach(opt => opt.classList.remove('active'));
+            this.classList.add('active');
+            this.querySelector('input[type="radio"]').checked = true;
+        });
+    });
+</script>
+{% endblock %}

@@ -1,0 +1,510 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Login / Register{% endblock %}
+
+{% block extra_css %}
+<style>
+    body {
+        background-color: #0a0a0a !important;
+        min-height: 100vh;
+    }
+    
+    .auth-container {
+        max-width: 500px;
+        margin: 50px auto;
+    }
+    
+    /* Dark Card Styling */
+    .auth-container .card {
+        background-color: #1a1a1a !important;
+        border: 1px solid #333 !important;
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+    }
+    
+    .auth-container .card-body {
+        background-color: #1a1a1a !important;
+        padding: 2rem !important;
+    }
+    
+    /* Header Text */
+    .auth-container h2 {
+        color: #ffffff !important;
+        font-weight: 600;
+    }
+    
+    .auth-container .text-muted {
+        color: #b0b0b0 !important;
+    }
+    
+    .auth-container p {
+        color: #e0e0e0 !important;
+    }
+    
+    /* Logo Styling */
+    .auth-container img {
+        filter: drop-shadow(0 0 20px rgba(13, 110, 253, 0.4));
+        transition: transform 0.3s ease;
+    }
+    
+    .auth-container img:hover {
+        transform: scale(1.05);
+    }
+    
+    /* Tabs */
+    .auth-tabs {
+        display: flex;
+        border-bottom: 2px solid #333;
+        margin-bottom: 30px;
+    }
+    
+    .auth-tab {
+        flex: 1;
+        text-align: center;
+        padding: 15px;
+        cursor: pointer;
+        background: #0a0a0a;
+        border: none;
+        font-size: 18px;
+        font-weight: 500;
+        transition: all 0.3s;
+        color: #888 !important;
+    }
+    
+    .auth-tab.active {
+        background: #1a1a1a;
+        color: #0d6efd !important;
+        border-bottom: 3px solid #0d6efd;
+        margin-bottom: -2px;
+    }
+    
+    .auth-tab:hover:not(.active) {
+        background: #252525;
+        color: #aaa !important;
+    }
+    
+    /* Form Styling */
+    .auth-form {
+        display: none;
+        animation: fadeIn 0.3s;
+    }
+    
+    .auth-form.active {
+        display: block;
+    }
+    
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(-10px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+    
+    .form-floating {
+        margin-bottom: 20px;
+    }
+    
+    /* Input Fields - Dark with white text */
+    .auth-container .form-control {
+        background-color: #2d2d2d !important;
+        color: #ffffff !important;
+        border: 1px solid #444 !important;
+        height: 58px;
+        padding: 1rem 0.75rem;
+    }
+    
+    .auth-container .form-control:focus {
+        background-color: #2d2d2d !important;
+        color: #ffffff !important;
+        border-color: #0d6efd !important;
+        box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
+    }
+    
+    .auth-container .form-control::placeholder {
+        color: #888 !important;
+    }
+    
+    /* Floating Labels */
+    .auth-container .form-floating > label {
+        color: #aaa !important;
+        padding: 1rem 0.75rem;
+        opacity: 1;
+        transform: scale(1) translateY(0);
+        transform-origin: 0 0;
+        transition: opacity 0.1s ease-in-out, transform 0.1s ease-in-out;
+        pointer-events: none;
+        position: absolute;
+        top: 0;
+        left: 0;
+        height: 100%;
+        border: 1px solid transparent;
+    }
+    
+    .auth-container .form-floating > .form-control:focus ~ label,
+    .auth-container .form-floating > .form-control:not(:placeholder-shown) ~ label {
+        color: #0d6efd !important;
+        opacity: 0.65;
+        transform: scale(0.85) translateY(-0.5rem) translateX(0.15rem);
+    }
+    
+    .auth-container .form-floating > .form-control::placeholder {
+        color: transparent;
+    }
+    
+    .auth-container .form-floating > .form-control:focus::placeholder {
+        color: transparent;
+    }
+    
+    /* Checkbox */
+    .auth-container .form-check-label {
+        color: #e0e0e0 !important;
+    }
+    
+    .auth-container .form-check-input {
+        background-color: #2d2d2d !important;
+        border: 1px solid #444 !important;
+    }
+    
+    .auth-container .form-check-input:checked {
+        background-color: #0d6efd !important;
+        border-color: #0d6efd !important;
+    }
+    
+    /* Password Toggle */
+    .password-toggle {
+        position: absolute;
+        right: 15px;
+        top: 50%;
+        transform: translateY(-50%);
+        cursor: pointer;
+        color: #aaa !important;
+        z-index: 10;
+        font-size: 1.1rem;
+    }
+    
+    .password-toggle:hover {
+        color: #fff !important;
+    }
+    
+    /* Buttons */
+    .auth-container .btn-primary {
+        background-color: #0d6efd;
+        border-color: #0d6efd;
+        color: #ffffff !important;
+        font-weight: 500;
+        padding: 12px;
+    }
+    
+    .auth-container .btn-primary:hover {
+        background-color: #0b5ed7;
+        border-color: #0a58ca;
+    }
+    
+    .auth-container .btn-success {
+        background-color: #198754;
+        border-color: #198754;
+        color: #ffffff !important;
+        font-weight: 500;
+        padding: 12px;
+    }
+    
+    .auth-container .btn-success:hover {
+        background-color: #157347;
+        border-color: #146c43;
+    }
+    
+    .auth-container .btn-outline-secondary {
+        background-color: transparent;
+        border-color: #444;
+        color: #aaa !important;
+    }
+    
+    .auth-container .btn-outline-secondary:hover {
+        background-color: #2d2d2d;
+        border-color: #555;
+        color: #fff !important;
+    }
+    
+    /* Links */
+    .auth-container a {
+        color: #0d6efd !important;
+        text-decoration: none;
+    }
+    
+    .auth-container a:hover {
+        color: #0a58ca !important;
+        text-decoration: underline;
+    }
+    
+    /* Divider */
+    .divider {
+        display: flex;
+        align-items: center;
+        text-align: center;
+        margin: 25px 0;
+    }
+    
+    .divider::before,
+    .divider::after {
+        content: '';
+        flex: 1;
+        border-bottom: 1px solid #333;
+    }
+    
+    .divider span {
+        padding: 0 15px;
+        color: #888 !important;
+        font-size: 14px;
+    }
+    
+    /* Small Text */
+    .auth-container small {
+        color: #aaa !important;
+        display: block;
+        margin-top: 5px;
+    }
+    
+    /* Social Buttons */
+    .social-login {
+        margin: 20px 0;
+    }
+    
+    /* Icons */
+    .auth-container i {
+        color: inherit !important;
+    }
+    
+    .text-center.mt-3 {
+        color: #888 !important;
+    }
+    
+    .text-center.mt-3 small {
+        color: #888 !important;
+    }
+    
+    /* Alerts */
+    .auth-container .alert {
+        background-color: #2d2d2d !important;
+        border: 1px solid #444 !important;
+        color: #fff !important;
+    }
+    
+    .auth-container .alert-danger {
+        background-color: #dc3545 !important;
+        border-color: #dc3545 !important;
+        color: #fff !important;
+    }
+    
+    .auth-container .alert-success {
+        background-color: #198754 !important;
+        border-color: #198754 !important;
+        color: #fff !important;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="auth-container">
+        <div class="card shadow-lg">
+            <div class="card-body p-4">
+                <div class="text-center mb-4">
+                    <img src="{% static 'images/dd3s-logo.svg' %}" alt="DD3S Logo" width="120" height="120" class="mb-3">
+                    <h2>DD3S</h2>
+                    <p class="text-muted">Molecular Database & Drug Discovery Platform</p>
+                </div>
+
+                <!-- Tabs -->
+                <div class="auth-tabs">
+                    <button class="auth-tab active" onclick="switchTab('login')">
+                        <i class="fas fa-sign-in-alt"></i> Login
+                    </button>
+                    <button class="auth-tab" onclick="switchTab('register')">
+                        <i class="fas fa-user-plus"></i> Register
+                    </button>
+                </div>
+
+                <!-- Login Form -->
+                <div id="login-form" class="auth-form active">
+                    <form method="POST" action="{% url 'authentication:auth' %}">
+                        {% csrf_token %}
+                        <input type="hidden" name="form_type" value="login">
+
+                        <div class="form-floating">
+                            <input type="text" class="form-control" id="login-username" name="username" 
+                                   placeholder="&nbsp;" required>
+                            <label for="login-username">
+                                <i class="fas fa-user"></i> Username
+                            </label>
+                        </div>
+
+                        <div class="form-floating position-relative">
+                            <input type="password" class="form-control" id="login-password" name="password" 
+                                   placeholder="&nbsp;" required>
+                            <label for="login-password">
+                                <i class="fas fa-lock"></i> Password
+                            </label>
+                            <span class="password-toggle" onclick="togglePassword('login-password')">
+                                <i class="fas fa-eye" id="login-password-icon"></i>
+                            </span>
+                        </div>
+
+                        <div class="form-check mb-3">
+                            <input class="form-check-input" type="checkbox" id="remember-me" name="remember">
+                            <label class="form-check-label" for="remember-me">
+                                Remember me
+                            </label>
+                        </div>
+
+                        <!-- reCAPTCHA -->
+                        <div class="mb-3">
+                            {{ login_form.captcha }}
+                        </div>
+
+                        <button type="submit" class="btn btn-primary w-100 mb-3">
+                            <i class="fas fa-sign-in-alt"></i> Login to Dashboard
+                        </button>
+
+                        <div class="text-center">
+                            <a href="#" class="text-muted small">Forgot password?</a>
+                        </div>
+                    </form>
+                </div>
+
+                <!-- Register Form -->
+                <div id="register-form" class="auth-form">
+                    <form method="POST" action="{% url 'authentication:auth' %}">
+                        {% csrf_token %}
+                        <input type="hidden" name="form_type" value="register">
+
+                        <div class="form-floating">
+                            <input type="text" class="form-control" id="register-first-name" name="first_name" 
+                                   placeholder="&nbsp;" required>
+                            <label for="register-first-name">
+                                <i class="fas fa-user"></i> First Name
+                            </label>
+                        </div>
+
+                        <div class="form-floating">
+                            <input type="text" class="form-control" id="register-last-name" name="last_name" 
+                                   placeholder="&nbsp;" required>
+                            <label for="register-last-name">
+                                <i class="fas fa-user"></i> Last Name
+                            </label>
+                        </div>
+
+                        <div class="form-floating">
+                            <input type="text" class="form-control" id="register-username" name="username" 
+                                   placeholder="&nbsp;" required>
+                            <label for="register-username">
+                                <i class="fas fa-user"></i> Username
+                            </label>
+                            <small class="text-muted">Choose a unique username</small>
+                        </div>
+
+                        <div class="form-floating">
+                            <input type="email" class="form-control" id="register-email" name="email" 
+                                   placeholder="&nbsp;" required>
+                            <label for="register-email">
+                                <i class="fas fa-envelope"></i> Email
+                            </label>
+                        </div>
+
+                        <div class="form-floating position-relative">
+                            <input type="password" class="form-control" id="register-password" name="password1" 
+                                   placeholder="&nbsp;" required>
+                            <label for="register-password">
+                                <i class="fas fa-lock"></i> Password
+                            </label>
+                            <span class="password-toggle" onclick="togglePassword('register-password')">
+                                <i class="fas fa-eye" id="register-password-icon"></i>
+                            </span>
+                            <small class="text-muted">Minimum 8 characters</small>
+                        </div>
+
+                        <div class="form-floating position-relative">
+                            <input type="password" class="form-control" id="register-password2" name="password2" 
+                                   placeholder="&nbsp;" required>
+                            <label for="register-password2">
+                                <i class="fas fa-lock"></i> Confirm Password
+                            </label>
+                            <span class="password-toggle" onclick="togglePassword('register-password2')">
+                                <i class="fas fa-eye" id="register-password2-icon"></i>
+                            </span>
+                        </div>
+
+                        <div class="form-check mb-3">
+                            <input class="form-check-input" type="checkbox" id="terms" required>
+                            <label class="form-check-label" for="terms">
+                                I agree to the <a href="{% url 'authentication:terms' %}" target="_blank" class="text-primary">Terms & Conditions</a>
+                            </label>
+                        </div>
+
+                        <!-- reCAPTCHA -->
+                        <div class="mb-3">
+                            {{ registration_form.captcha }}
+                        </div>
+
+                        <button type="submit" class="btn btn-primary w-100 mb-3">
+                            <i class="fas fa-user-plus"></i> Create Account
+                        </button>
+                    </form>
+                </div>
+
+                <!-- Divider -->
+                <div class="divider">
+                    <span>or continue with</span>
+                </div>
+
+                <!-- Social Login Buttons -->
+                <div class="social-login">
+                    <a href="{% url 'google_login' %}" class="btn btn-outline-secondary w-100 mb-2">
+                        <i class="fab fa-google"></i> Continue with Google
+                    </a>
+                    <a href="{% url 'github_login' %}" class="btn btn-outline-secondary w-100">
+                        <i class="fab fa-github"></i> Continue with GitHub
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <div class="text-center mt-3 text-muted">
+            <small>
+                <i class="fas fa-shield-alt"></i> Your data is secure and encrypted
+            </small>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    function switchTab(tab) {
+        // Update tabs
+        document.querySelectorAll('.auth-tab').forEach(t => t.classList.remove('active'));
+        event.target.closest('.auth-tab').classList.add('active');
+        
+        // Update forms
+        document.querySelectorAll('.auth-form').forEach(f => f.classList.remove('active'));
+        document.getElementById(tab + '-form').classList.add('active');
+    }
+
+    function togglePassword(fieldId) {
+        const field = document.getElementById(fieldId);
+        const icon = document.getElementById(fieldId + '-icon');
+        
+        if (field.type === 'password') {
+            field.type = 'text';
+            icon.classList.remove('fa-eye');
+            icon.classList.add('fa-eye-slash');
+        } else {
+            field.type = 'password';
+            icon.classList.remove('fa-eye-slash');
+            icon.classList.add('fa-eye');
+        }
+    }
+
+    // Auto-switch to register tab if there are registration errors
+    {% if 'form_type' in request.POST and request.POST.form_type == 'register' %}
+        switchTab('register');
+    {% endif %}
+</script>
+{% endblock %}

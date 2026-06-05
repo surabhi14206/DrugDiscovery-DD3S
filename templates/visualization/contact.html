@@ -1,0 +1,233 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Contact Us - DD3S{% endblock %}
+
+{% block content %}
+<div class="container my-5">
+    <!-- Page Header -->
+    <div class="text-center mb-5">
+        <h1 class="display-4 fw-bold">
+            <i class="fas fa-envelope text-primary"></i> Contact Us
+        </h1>
+        <p class="lead text-muted">Get in touch with our team - we're here to help!</p>
+    </div>
+
+    <div class="row g-4">
+        <!-- Contact Information Cards -->
+        <div class="col-lg-4">
+            <div class="card h-100 shadow-sm">
+                <div class="card-body text-center">
+                    <div class="mb-3">
+                        <i class="fas fa-envelope fa-3x text-primary"></i>
+                    </div>
+                    <h5 class="card-title">Email Us</h5>
+                    <p class="card-text text-muted mb-3">We'll respond within 24 hours</p>
+                    <a href="mailto:dd3s.sup@gmail.com" class="text-decoration-none">
+                        <strong>dd3s.sup@gmail.com</strong>
+                    </a>
+                    <br>
+                    <a href="mailto:dd3s.sup@gmail.com" class="text-decoration-none">
+                        dd3s.sup@gmail.com
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-4">
+            <div class="card h-100 shadow-sm">
+                <div class="card-body text-center">
+                    <div class="mb-3">
+                        <i class="fas fa-phone fa-3x text-success"></i>
+                    </div>
+                    <h5 class="card-title">Call Us</h5>
+                    <p class="card-text text-muted mb-3">Mon-Fri, 9 AM - 6 PM EST</p>
+                    <a href="tel:+1-800-PDB-HELP" class="text-decoration-none">
+                        <strong>+1 (800) PDB-HELP</strong>
+                    </a>
+                    <br>
+                    <a href="tel:+1-555-123-4567" class="text-decoration-none">
+                        +1 (555) 123-4567
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-4">
+            <div class="card h-100 shadow-sm">
+                <div class="card-body text-center">
+                    <div class="mb-3">
+                        <i class="fas fa-map-marker-alt fa-3x text-danger"></i>
+                    </div>
+                    <h5 class="card-title">Our Location</h5>
+                    <p class="card-text text-muted mb-3">We're a distributed team</p>
+                    <address class="mb-0">
+                        <strong>DD3S Team</strong><br>
+                        Remote-first team<br>
+                        Based in Mumbai, India
+                    </address>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Social Media Section -->
+    <div class="card shadow-sm my-5">
+        <div class="card-body text-center py-4">
+            <h4 class="mb-4">
+                <i class="fas fa-share-alt"></i> Connect With Us
+            </h4>
+            <div class="d-flex justify-content-center gap-3 flex-wrap">
+                <a href="#" class="btn btn-outline-primary btn-lg" title="Twitter">
+                    <i class="fab fa-twitter"></i> Twitter
+                </a>
+                <a href="#" class="btn btn-outline-info btn-lg" title="LinkedIn">
+                    <i class="fab fa-linkedin"></i> LinkedIn
+                </a>
+                <a href="#" class="btn btn-outline-dark btn-lg" title="GitHub">
+                    <i class="fab fa-github"></i> GitHub
+                </a>
+                <a href="#" class="btn btn-outline-danger btn-lg" title="YouTube">
+                    <i class="fab fa-youtube"></i> YouTube
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Contact Form -->
+    <div class="card shadow-sm">
+        <div class="card-header bg-primary text-white">
+            <h4 class="mb-0">
+                <i class="fas fa-paper-plane"></i> Send us a Message
+            </h4>
+        </div>
+        <div class="card-body">
+            {% if messages %}
+                {% for message in messages %}
+                <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                    {{ message }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+                {% endfor %}
+            {% endif %}
+            
+            <form method="post" id="contactForm">
+                {% csrf_token %}
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <label for="contactName" class="form-label">Full Name <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" name="name" id="contactName" 
+                               value="{% if user.is_authenticated %}{{ user.get_full_name|default:user.username }}{% endif %}" 
+                               placeholder="John Doe" required>
+                    </div>
+                    <div class="col-md-6">
+                        <label for="contactEmail" class="form-label">Email Address <span class="text-danger">*</span></label>
+                        <input type="email" class="form-control" name="email" id="contactEmail" 
+                               value="{% if user.is_authenticated %}{{ user.email }}{% endif %}" 
+                               placeholder="john@example.com" required>
+                    </div>
+                    <div class="col-md-6">
+                        <label for="contactPhone" class="form-label">Phone Number</label>
+                        <input type="tel" class="form-control" name="phone" id="contactPhone" 
+                               placeholder="+1 (555) 123-4567">
+                    </div>
+                    <div class="col-md-6">
+                        <label for="contactSubject" class="form-label">Subject <span class="text-danger">*</span></label>
+                        <select class="form-select" name="subject" id="contactSubject" required>
+                            <option value="">Choose...</option>
+                            <option value="general">General Inquiry</option>
+                            <option value="support">Technical Support</option>
+                            <option value="feature">Feature Request</option>
+                            <option value="bug">Bug Report</option>
+                            <option value="partnership">Partnership Opportunity</option>
+                            <option value="other">Other</option>
+                        </select>
+                    </div>
+                    <div class="col-12">
+                        <label for="contactMessage" class="form-label">Message <span class="text-danger">*</span></label>
+                        <textarea class="form-control" name="message" id="contactMessage" rows="6" 
+                                  placeholder="Tell us how we can help you..." required></textarea>
+                    </div>
+                    <div class="col-12">
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="contactCopy">
+                            <label class="form-check-label" for="contactCopy">
+                                Send me a copy of this message
+                            </label>
+                        </div>
+                    </div>
+                    <div class="col-12">
+                        <button type="submit" class="btn btn-primary btn-lg px-5">
+                            <i class="fas fa-paper-plane me-2"></i> Send Message
+                        </button>
+                        <button type="reset" class="btn btn-secondary btn-lg px-5 ms-2">
+                            <i class="fas fa-redo me-2"></i> Reset
+                        </button>
+                    </div>
+                </div>
+            </form>
+            <div id="contactFormMessage" class="mt-3"></div>
+        </div>
+    </div>
+
+    <!-- Additional Information -->
+    <div class="row g-4 my-5">
+        <div class="col-md-6">
+            <div class="card shadow-sm h-100">
+                <div class="card-body">
+                    <h5 class="card-title">
+                        <i class="fas fa-clock text-info"></i> Office Hours
+                    </h5>
+                    <ul class="list-unstyled mb-0">
+                        <li class="mb-2"><strong>Monday - Friday:</strong> 9:00 AM - 6:00 PM EST</li>
+                        <li class="mb-2"><strong>Saturday:</strong> 10:00 AM - 2:00 PM EST</li>
+                        <li class="mb-2"><strong>Sunday:</strong> Closed</li>
+                        <li class="mb-2"><strong>Holidays:</strong> Closed</li>
+                    </ul>
+                    <hr>
+                    <p class="mb-0 text-muted">
+                        <i class="fas fa-info-circle"></i> 
+                        For urgent matters outside business hours, please email us and we'll respond as soon as possible.
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-6">
+            <div class="card shadow-sm h-100">
+                <div class="card-body">
+                    <h5 class="card-title">
+                        <i class="fas fa-question-circle text-warning"></i> FAQ
+                    </h5>
+                    <div class="accordion" id="faqAccordion">
+                        <div class="accordion-item">
+                            <h2 class="accordion-header">
+                                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq1">
+                                    How quickly will I receive a response?
+                                </button>
+                            </h2>
+                            <div id="faq1" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+                                <div class="accordion-body">
+                                    We typically respond to all inquiries within 24 hours during business days.
+                                </div>
+                            </div>
+                        </div>
+                        <div class="accordion-item">
+                            <h2 class="accordion-header">
+                                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq2">
+                                    Do you offer technical support?
+                                </button>
+                            </h2>
+                            <div id="faq2" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+                                <div class="accordion-body">
+                                    Yes! Our technical support team is available to help with any issues you encounter.
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

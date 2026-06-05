@@ -1,0 +1,447 @@
+{% extends 'base.html' %}
+
+{% block title %}User Management{% endblock %}
+
+{% block extra_css %}
+<style>
+    .stats-card {
+        transition: transform 0.2s, box-shadow 0.2s;
+    }
+
+    .stats-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+    }
+
+    .stats-icon {
+        font-size: 2.5rem;
+        opacity: 0.2;
+        position: absolute;
+        right: 1rem;
+        top: 50%;
+        transform: translateY(-50%);
+    }
+
+    .user-avatar {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: bold;
+        font-size: 1rem;
+        margin-right: 0.5rem;
+    }
+
+    .theme-dark .card {
+        background-color: var(--card-bg);
+        border-color: var(--border-color);
+    }
+
+    .theme-dark .table {
+        color: var(--text-color);
+    }
+
+    .theme-dark .table-striped tbody tr:nth-of-type(odd) {
+        background-color: rgba(255, 255, 255, 0.02);
+    }
+
+    .theme-dark tbody tr:hover {
+        background-color: rgba(255, 255, 255, 0.05);
+    }
+
+    .filter-section {
+        background: linear-gradient(135deg, #0d6efd 0%, #0a58ca 100%);
+        border-radius: 10px;
+        padding: 1.5rem;
+        margin-bottom: 2rem;
+        color: white;
+    }
+
+    .theme-dark .filter-section {
+        background: linear-gradient(135deg, #434343 0%, #000000 100%);
+    }
+
+    .search-box {
+        border-radius: 50px;
+        border: none;
+        padding: 0.75rem 1.5rem;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    }
+
+    /* Dark theme hardening for table and filters */
+    .theme-dark .table-responsive {
+        background: #0f131b;
+    }
+
+    .theme-dark #usersTable thead,
+    .theme-dark #usersTable thead tr,
+    .theme-dark #usersTable thead th {
+        background: #1f2430 !important;
+        color: #e8edf5 !important;
+        border-color: #2f3542 !important;
+    }
+
+    .theme-dark #usersTable tbody tr {
+        background: #141924 !important;
+        color: #e8edf5 !important;
+        border-color: #2b303c !important;
+    }
+
+    .theme-dark #usersTable tbody tr:nth-of-type(odd) {
+        background: #11161f !important;
+    }
+
+    .theme-dark #usersTable tbody tr:hover {
+        background: #1d2634 !important;
+    }
+
+    .theme-dark #usersTable td,
+    .theme-dark #usersTable th {
+        color: #e8edf5 !important;
+        background-color: transparent !important;
+        border-color: #2b303c !important;
+        box-shadow: none !important;
+    }
+
+    .theme-dark .table thead .text-muted,
+    .theme-dark .table tbody .text-muted {
+        color: #a8b2c2 !important;
+    }
+
+    .theme-dark .filter-section {
+        background: linear-gradient(135deg, #1c2330 0%, #111722 100%);
+        color: #e8edf5;
+    }
+
+    .theme-dark .filter-section .input-group-text,
+    .theme-dark .filter-section .search-box {
+        background-color: #141924 !important;
+        color: #e8edf5 !important;
+    }
+
+    .theme-dark .filter-section .search-box::placeholder {
+        color: #a8b2c2 !important;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <!-- Back Button -->
+    <div class="mb-3">
+        <a href="{% url 'admin_dashboard:dashboard' %}" class="btn btn-outline-secondary">
+            <i class="fas fa-arrow-left me-2"></i> Back to Dashboard
+        </a>
+    </div>
+
+    <!-- Page Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1 class="mb-0 display-6 fw-bold">
+                <i class="fas fa-users text-primary"></i> User Management
+            </h1>
+            <p class="text-muted mb-0">Manage and monitor all registered users</p>
+        </div>
+        <a href="/admin/authentication/customuser/" class="btn btn-primary btn-lg shadow">
+            <i class="fas fa-plus me-2"></i> Add New User
+        </a>
+    </div>
+
+    <!-- Statistics Cards -->
+    <div class="row g-4 mb-4">
+        <div class="col-xl-3 col-md-6">
+            <div class="card stats-card border-0 shadow-sm position-relative overflow-hidden">
+                <div class="card-body">
+                    <h6 class="text-muted text-uppercase fw-bold mb-2">Total Users</h6>
+                    <h2 class="mb-0 fw-bold">{{ users.count }}</h2>
+                    <i class="fas fa-users stats-icon text-primary"></i>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-3 col-md-6">
+            <div class="card stats-card border-0 shadow-sm position-relative overflow-hidden">
+                <div class="card-body">
+                    <h6 class="text-muted text-uppercase fw-bold mb-2">Active Users</h6>
+                    <h2 class="mb-0 fw-bold text-success">{{ users|length }}</h2>
+                    <i class="fas fa-user-check stats-icon text-success"></i>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-3 col-md-6">
+            <div class="card stats-card border-0 shadow-sm position-relative overflow-hidden">
+                <div class="card-body">
+                    <h6 class="text-muted text-uppercase fw-bold mb-2">Admin Users</h6>
+                    <h2 class="mb-0 fw-bold text-danger">
+                        {% with admin_count=0 %}
+                        {% for user in users %}
+                        {% if user.is_superuser %}
+                        {% with admin_count=admin_count|add:1 %}{% endwith %}
+                        {% endif %}
+                        {% endfor %}
+                        {{ admin_count }}
+                        {% endwith %}
+                    </h2>
+                    <i class="fas fa-user-shield stats-icon text-danger"></i>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-3 col-md-6">
+            <div class="card stats-card border-0 shadow-sm position-relative overflow-hidden">
+                <div class="card-body">
+                    <h6 class="text-muted text-uppercase fw-bold mb-2">Staff Members</h6>
+                    <h2 class="mb-0 fw-bold text-warning">
+                        {% with staff_count=0 %}
+                        {% for user in users %}
+                        {% if user.is_staff %}
+                        {% with staff_count=staff_count|add:1 %}{% endwith %}
+                        {% endif %}
+                        {% endfor %}
+                        {{ staff_count }}
+                        {% endwith %}
+                    </h2>
+                    <i class="fas fa-user-tie stats-icon text-warning"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Search and Filter Section -->
+    <div class="filter-section shadow">
+        <div class="row g-3 align-items-center">
+            <div class="col-md-6">
+                <div class="input-group">
+                    <span class="input-group-text bg-white border-0">
+                        <i class="fas fa-search"></i>
+                    </span>
+                    <input type="text" id="searchInput" class="form-control search-box border-0"
+                        placeholder="Search by username, email, or name...">
+                </div>
+            </div>
+            <div class="col-md-2">
+                <select id="roleFilter" class="form-select search-box border-0">
+                    <option value="">All Roles</option>
+                    <option value="admin">Admin</option>
+                    <option value="staff">Staff</option>
+                    <option value="user">Regular User</option>
+                </select>
+            </div>
+            <div class="col-md-2">
+                <select id="statusFilter" class="form-select search-box border-0">
+                    <option value="">All Status</option>
+                    <option value="active">Active</option>
+                    <option value="inactive">Inactive</option>
+                </select>
+            </div>
+            <div class="col-md-2">
+                <button class="btn btn-light w-100 search-box" onclick="resetFilters()">
+                    <i class="fas fa-redo me-2"></i> Reset
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Users Table -->
+    <div class="card border-0 shadow-sm">
+        <div class="card-header bg-transparent border-0 py-3">
+            <div class="d-flex justify-content-between align-items-center">
+                <h5 class="mb-0 fw-bold">
+                    <i class="fas fa-list me-2"></i> All Users
+                    <span class="badge bg-primary rounded-pill" id="userCount">{{ users.count }}</span>
+                </h5>
+                <div class="btn-group">
+                    <button class="btn btn-sm btn-outline-secondary" onclick="exportUsers('csv')">
+                        <i class="fas fa-file-csv me-1"></i> Export CSV
+                    </button>
+                    <button class="btn btn-sm btn-outline-secondary" onclick="exportUsers('pdf')">
+                        <i class="fas fa-file-pdf me-1"></i> Export PDF
+                    </button>
+                </div>
+            </div>
+        </div>
+        <div class="card-body p-0">
+            {% if users %}
+            <div class="table-responsive">
+                <table class="table table-hover table-striped mb-0" id="usersTable">
+                    <thead class="table-light">
+                        <tr>
+                            <th style="width: 60px;">ID</th>
+                            <th>User</th>
+                            <th>Email</th>
+                            <th>Name</th>
+                            <th>Joined</th>
+                            <th>Last Activity</th>
+                            <th>Status</th>
+                            <th style="width: 200px;" class="text-center">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for user in users %}
+                        <tr data-role="{% if user.is_superuser %}admin{% elif user.is_staff %}staff{% else %}user{% endif %}"
+                            data-status="{% if user.is_active %}active{% else %}inactive{% endif %}">
+                            <td class="fw-bold text-muted">#{{ user.id }}</td>
+                            <td>
+                                <div class="d-flex align-items-center">
+                                    <div class="user-avatar bg-primary text-white">
+                                        {{ user.username|first|upper }}
+                                    </div>
+                                    <div>
+                                        <strong class="d-block">{{ user.username }}</strong>
+                                        {% if user.is_superuser %}
+                                        <span class="badge bg-danger">
+                                            <i class="fas fa-shield-alt"></i> Admin
+                                        </span>
+                                        {% elif user.is_staff %}
+                                        <span class="badge bg-warning">
+                                            <i class="fas fa-user-tie"></i> Staff
+                                        </span>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </td>
+                            <td>
+                                {% if user.email %}
+                                <i class="fas fa-envelope text-muted me-1"></i>
+                                <small>{{ user.email }}</small>
+                                {% if user.email_verified %}
+                                <i class="fas fa-check-circle text-success ms-1" title="Verified"></i>
+                                {% endif %}
+                                {% else %}
+                                <span class="text-muted">-</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if user.first_name or user.last_name %}
+                                <small>{{ user.first_name }} {{ user.last_name }}</small>
+                                {% else %}
+                                <span class="text-muted">-</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <small class="text-muted">
+                                    <i class="fas fa-calendar-plus me-1"></i>
+                                    {{ user.date_joined|date:"M d, Y" }}
+                                </small>
+                            </td>
+                            <td>
+                                {% if user.last_activity %}
+                                <small class="text-muted">
+                                    <i class="fas fa-clock me-1"></i>
+                                    {{ user.last_activity|timesince }} ago
+                                </small>
+                                {% else %}
+                                <span class="badge bg-secondary">Never</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if user.is_active %}
+                                <span class="badge bg-success">
+                                    <i class="fas fa-circle"></i> Active
+                                </span>
+                                {% else %}
+                                <span class="badge bg-secondary">
+                                    <i class="fas fa-ban"></i> Inactive
+                                </span>
+                                {% endif %}
+                            </td>
+                            <td class="text-center">
+                                <div class="btn-group btn-group-sm">
+                                    <a href="{% url 'admin_dashboard:user_detail' user.id %}"
+                                        class="btn btn-outline-primary" title="View Details">
+                                        <i class="fas fa-eye"></i>
+                                    </a>
+                                    <a href="/admin/authentication/customuser/{{ user.id }}/change/"
+                                        class="btn btn-outline-secondary" title="Edit User">
+                                        <i class="fas fa-edit"></i>
+                                    </a>
+                                    <button class="btn btn-outline-info" onclick="viewUserActivity({{ user.id }})"
+                                        title="Activity Log">
+                                        <i class="fas fa-history"></i>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="p-5 text-center">
+                <i class="fas fa-users-slash fa-5x mb-4 text-muted opacity-25"></i>
+                <h4 class="text-muted">No users found</h4>
+                <p class="text-muted">There are no registered users in the system yet.</p>
+                <a href="/admin/authentication/customuser/" class="btn btn-primary mt-3">
+                    <i class="fas fa-plus me-2"></i> Add First User
+                </a>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<script>
+    // Search functionality
+    document.getElementById('searchInput')?.addEventListener('keyup', function () {
+        filterTable();
+    });
+
+    // Role filter
+    document.getElementById('roleFilter')?.addEventListener('change', function () {
+        filterTable();
+    });
+
+    // Status filter
+    document.getElementById('statusFilter')?.addEventListener('change', function () {
+        filterTable();
+    });
+
+    function filterTable() {
+        const searchValue = document.getElementById('searchInput')?.value.toLowerCase() || '';
+        const roleValue = document.getElementById('roleFilter')?.value.toLowerCase() || '';
+        const statusValue = document.getElementById('statusFilter')?.value.toLowerCase() || '';
+
+        const rows = document.querySelectorAll('#usersTable tbody tr');
+        let visibleCount = 0;
+
+        rows.forEach(row => {
+            const text = row.textContent.toLowerCase();
+            const role = row.dataset.role || '';
+            const status = row.dataset.status || '';
+
+            const matchesSearch = text.includes(searchValue);
+            const matchesRole = !roleValue || role === roleValue;
+            const matchesStatus = !statusValue || status === statusValue;
+
+            if (matchesSearch && matchesRole && matchesStatus) {
+                row.style.display = '';
+                visibleCount++;
+            } else {
+                row.style.display = 'none';
+            }
+        });
+
+        // Update count
+        const countBadge = document.getElementById('userCount');
+        if (countBadge) {
+            countBadge.textContent = visibleCount;
+        }
+    }
+
+    function resetFilters() {
+        document.getElementById('searchInput').value = '';
+        document.getElementById('roleFilter').value = '';
+        document.getElementById('statusFilter').value = '';
+        filterTable();
+    }
+
+    function exportUsers(format) {
+        alert(`Exporting users as ${format.toUpperCase()}...`);
+        // In production, this would trigger actual export
+    }
+
+    function viewUserActivity(userId) {
+        window.location.href = `/admin-dashboard/users/${userId}/`;
+    }
+</script>
+{% endblock %}

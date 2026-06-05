@@ -1,0 +1,815 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Compound Analyzer - Drug Discovery Tools{% endblock %}
+
+{% block extra_css %}
+<style>
+    .analyzer-card {
+        background: white;
+        border-radius: 15px;
+        padding: 2rem;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        margin-bottom: 2rem;
+    }
+    
+    .theme-dark .analyzer-card {
+        background: #242424;
+        border: 1px solid #404040;
+    }
+    
+    .result-section {
+        margin-top: 2rem;
+        display: none;
+    }
+    
+    .result-section.show {
+        display: block;
+    }
+    
+    .structure-viewer {
+        border: 2px solid #dee2e6;
+        border-radius: 10px;
+        padding: 1rem;
+        min-height: 400px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: #f8f9fa;
+    }
+    
+    .theme-dark .structure-viewer {
+        background: #1a1a1a;
+        border-color: #404040;
+    }
+    
+    .property-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 1rem;
+        margin-top: 1rem;
+    }
+    
+    .property-item {
+        background: #f8f9fa;
+        padding: 1rem;
+        border-radius: 8px;
+        border-left: 4px solid #0d6efd;
+    }
+    
+    .theme-dark .property-item {
+        background: #2d2d2d;
+        border-color: #667eea;
+    }
+    
+    .property-label {
+        font-size: 0.85rem;
+        color: #6c757d;
+        margin-bottom: 0.25rem;
+    }
+    
+    .theme-dark .property-label {
+        color: #a0a0a0;
+    }
+    
+    .property-value {
+        font-size: 1.25rem;
+        font-weight: bold;
+        color: #212529;
+    }
+    
+    .theme-dark .property-value {
+        color: #e4e4e4;
+    }
+    
+    .alert-badge {
+        display: inline-block;
+        padding: 0.5rem 1rem;
+        border-radius: 20px;
+        font-weight: 600;
+        margin-right: 0.5rem;
+        margin-bottom: 0.5rem;
+    }
+    
+    .risk-low {
+        background: #d1e7dd;
+        color: #0f5132;
+    }
+    
+    .theme-dark .risk-low,
+    [data-theme="dark"] .risk-low {
+        background: #1a3a2e;
+        color: #5fd17d;
+        border: 1px solid #2e5a47;
+    }
+    
+    .risk-moderate {
+        background: #fff3cd;
+        color: #664d03;
+    }
+    
+    .theme-dark .risk-moderate,
+    [data-theme="dark"] .risk-moderate {
+        background: #3a3520;
+        color: #ffc107;
+        border: 1px solid #5a5030;
+    }
+    
+    .risk-high {
+        background: #f8d7da;
+        color: #842029;
+    }
+    
+    .theme-dark .risk-high,
+    [data-theme="dark"] .risk-high {
+        background: #3a1f21;
+        color: #ff6b6b;
+        border: 1px solid #5a3034;
+    }
+    
+    /* Dark mode Bootstrap alert overrides */
+    .theme-dark .alert,
+    [data-theme="dark"] .alert {
+        background: #2d2d2d;
+        border-color: #404040;
+        color: #e4e4e4;
+    }
+    
+    .theme-dark .alert-success,
+    [data-theme="dark"] .alert-success {
+        background: #1a3a2e;
+        border-color: #2e5a47;
+        color: #5fd17d;
+    }
+    
+    .theme-dark .alert-warning,
+    [data-theme="dark"] .alert-warning {
+        background: #3a3520;
+        border-color: #5a5030;
+        color: #ffc107;
+    }
+    
+    .theme-dark .alert-danger,
+    [data-theme="dark"] .alert-danger {
+        background: #3a1f21;
+        border-color: #5a3034;
+        color: #ff6b6b;
+    }
+    
+    .theme-dark .alert-info,
+    [data-theme="dark"] .alert-info {
+        background: #1a2a3a;
+        border-color: #2e4a5a;
+        color: #64b5f6;
+    }
+    
+    .theme-dark .text-success,
+    [data-theme="dark"] .text-success {
+        color: #5fd17d !important;
+    }
+    
+    .theme-dark .text-danger,
+    [data-theme="dark"] .text-danger {
+        color: #ff6b6b !important;
+    }
+    
+    .theme-dark .text-warning,
+    [data-theme="dark"] .text-warning {
+        color: #ffc107 !important;
+    }
+    
+    #viewer-3d {
+        width: 100%;
+        height: 400px;
+        position: relative;
+        background: #f8f9fa;
+    }
+    
+    .theme-dark #viewer-3d,
+    [data-theme="dark"] #viewer-3d {
+        background: #1a1a1a;
+    }
+    
+    .example-smiles {
+        cursor: pointer;
+        color: #0d6efd;
+        text-decoration: underline;
+    }
+    
+    .example-smiles:hover {
+        color: #0a58ca;
+    }
+    
+    .theme-dark .example-smiles,
+    [data-theme="dark"] .example-smiles {
+        color: #667eea;
+    }
+    
+    .theme-dark .example-smiles:hover,
+    [data-theme="dark"] .example-smiles:hover {
+        color: #8b9cff;
+    }
+    
+    /* Dark mode form controls */
+    .theme-dark .form-control,
+    [data-theme="dark"] .form-control {
+        background-color: #2d2d2d;
+        border-color: #404040;
+        color: #e4e4e4;
+    }
+    
+    .theme-dark .form-control:focus,
+    [data-theme="dark"] .form-control:focus {
+        background-color: #2d2d2d;
+        border-color: #667eea;
+        color: #e4e4e4;
+    }
+    
+    .theme-dark .form-text,
+    [data-theme="dark"] .form-text {
+        color: #a0a0a0;
+    }
+    
+    .theme-dark .form-text a,
+    [data-theme="dark"] .form-text a {
+        color: #667eea;
+    }
+    
+    .theme-dark h1, .theme-dark h2, .theme-dark h3, .theme-dark h4, .theme-dark h5,
+    [data-theme="dark"] h1, [data-theme="dark"] h2, [data-theme="dark"] h3,
+    [data-theme="dark"] h4, [data-theme="dark"] h5 {
+        color: #e4e4e4;
+    }
+    
+    .theme-dark .lead,
+    [data-theme="dark"] .lead {
+        color: #c0c0c0;
+    }
+    
+    /* Toast Notification Styles */
+    .toast-container {
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        z-index: 1050;
+        pointer-events: none;
+    }
+    
+    .toast {
+        pointer-events: auto;
+        min-width: 300px;
+        max-width: 400px;
+        background: white;
+        border-radius: 8px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        margin-bottom: 10px;
+        animation: slideInRight 0.3s ease-out;
+    }
+    
+    @keyframes slideInRight {
+        from {
+            transform: translateX(400px);
+            opacity: 0;
+        }
+        to {
+            transform: translateX(0);
+            opacity: 1;
+        }
+    }
+    
+    .toast.hiding {
+        animation: slideOutRight 0.3s ease-in forwards;
+    }
+    
+    @keyframes slideOutRight {
+        from {
+            transform: translateX(0);
+            opacity: 1;
+        }
+        to {
+            transform: translateX(400px);
+            opacity: 0;
+        }
+    }
+    
+    .toast-header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 0.75rem 1rem;
+        border-radius: 8px 8px 0 0;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+    
+    .toast-header.toast-warning {
+        background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+    }
+    
+    .toast-header.toast-error {
+        background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
+    }
+    
+    .toast-header.toast-success {
+        background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
+    }
+    
+    .toast-body {
+        padding: 1rem;
+        color: #212529;
+        line-height: 1.5;
+    }
+    
+    .toast-close {
+        background: transparent;
+        border: none;
+        color: white;
+        font-size: 1.2rem;
+        cursor: pointer;
+        padding: 0;
+        width: 24px;
+        height: 24px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-left: auto;
+        opacity: 0.8;
+        transition: opacity 0.2s;
+    }
+    
+    .toast-close:hover {
+        opacity: 1;
+    }
+    
+    /* Dark mode toast styles */
+    .theme-dark .toast,
+    [data-theme="dark"] .toast {
+        background: #2d2d2d;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+    }
+    
+    .theme-dark .toast-body,
+    [data-theme="dark"] .toast-body {
+        color: #e4e4e4;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <!-- Header -->
+    <div class="analyzer-card">
+        <h1 class="mb-3"><i class="fas fa-flask"></i> Compound Analyzer</h1>
+        <p class="lead">
+            Analyze chemical compounds for drug discovery. Calculate molecular properties, 
+            predict solubility using ESOL, screen for toxicity alerts, and visualize 2D/3D structures.
+        </p>
+    </div>
+    
+    <!-- Input Section -->
+    <div class="analyzer-card">
+        <h3><i class="fas fa-keyboard"></i> Input SMILES String</h3>
+        <form id="analyzerForm">
+            <div class="mb-3">
+                <label for="smilesInput" class="form-label">
+                    SMILES (Simplified Molecular Input Line Entry System)
+                </label>
+                <input type="text" 
+                       class="form-control form-control-lg" 
+                       id="smilesInput" 
+                       placeholder="e.g., CC(=O)OC1=CC=CC=C1C(=O)O (Aspirin)"
+                       required>
+                <div class="form-text">
+                    Enter a valid SMILES string to analyze the compound. 
+                    <a href="https://en.wikipedia.org/wiki/Simplified_molecular-input_line-entry_system" target="_blank">
+                        Learn about SMILES notation <i class="fas fa-external-link-alt"></i>
+                    </a>
+                </div>
+            </div>
+            
+            <!-- Example SMILES -->
+            <div class="mb-3">
+                <p class="mb-2"><strong>Quick Examples:</strong></p>
+                <span class="example-smiles" data-smiles="CC(=O)OC1=CC=CC=C1C(=O)O">Aspirin</span> | 
+                <span class="example-smiles" data-smiles="CN1C=NC2=C1C(=O)N(C(=O)N2C)C">Caffeine</span> | 
+                <span class="example-smiles" data-smiles="CC(C)Cc1ccc(cc1)C(C)C(=O)O">Ibuprofen</span> | 
+                <span class="example-smiles" data-smiles="CN1CCC[C@H]1c2cccnc2">Nicotine</span> | 
+                <span class="example-smiles" data-smiles="CC(=O)Nc1ccc(O)cc1">Paracetamol</span>
+            </div>
+            
+            <button type="submit" class="btn btn-primary btn-lg">
+                <i class="fas fa-search"></i> Analyze Compound
+            </button>
+        </form>
+    </div>
+    
+    <!-- Results Section -->
+    <div class="result-section" id="resultsSection">
+        <!-- Basic Information -->
+        <div class="analyzer-card">
+            <h3><i class="fas fa-info-circle"></i> Basic Information</h3>
+            <div class="property-grid" style="grid-template-columns: 1fr;">
+                <div class="property-item">
+                    <div class="property-label">Formula</div>
+                    <div class="property-value" id="molecularFormula">N/A</div>
+                </div>
+                <div class="property-item">
+                    <div class="property-label">SMILES</div>
+                    <div class="property-value" id="smilesDisplay" style="font-family: monospace; font-size: 0.9rem; word-break: break-all;">N/A</div>
+                </div>
+                <div class="property-item">
+                    <div class="property-label">Weight</div>
+                    <div class="property-value" id="molecularWeight">N/A</div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 2D Structure -->
+        <div class="analyzer-card">
+            <h3><i class="fas fa-image"></i> 2D Structure</h3>
+            <div class="structure-viewer" id="structure2d">
+                <img id="image2d" src="" alt="2D Structure" style="max-width: 100%; max-height: 400px;">
+            </div>
+        </div>
+        
+        <!-- 3D Structure -->
+        <div class="analyzer-card">
+            <h3><i class="fas fa-cube"></i> 3D Structure (Interactive)</h3>
+            <div class="structure-viewer">
+                <div id="viewer-3d"></div>
+            </div>
+            <p class="text-muted mt-2" id="3d-status"></p>
+        </div>
+        
+        <!-- Molecular Descriptors -->
+        <div class="analyzer-card">
+            <h3><i class="fas fa-chart-bar"></i> Molecular Descriptors</h3>
+            <div class="property-grid" id="descriptorsGrid"></div>
+        </div>
+        
+        <!-- Solubility (ESOL) -->
+        <div class="analyzer-card">
+            <h3><i class="fas fa-tint"></i> Solubility Analysis (ESOL Method)</h3>
+            <div id="solubilityResults"></div>
+            <div class="mt-3">
+                <p class="text-muted mb-2">
+                    <strong>ESOL Formula:</strong> LogS = 0.16 - 0.63×LogP - 0.0062×MW + 0.066×RB - 0.74×AP
+                </p>
+                <small class="text-muted">
+                    Where MW = Molecular Weight, RB = Rotatable Bonds, AP = Aromatic Proportion. 
+                    This model provides aqueous solubility estimation without requiring melting point data.
+                </small>
+            </div>
+        </div>
+        
+        <!-- Toxicity Alerts -->
+        <div class="analyzer-card">
+            <h3><i class="fas fa-exclamation-triangle"></i> Toxicity Screening</h3>
+            <div id="toxicityResults"></div>
+            <div class="mt-3">
+                <p class="text-muted mb-2">
+                    <strong>Filters Used:</strong>
+                </p>
+                <ul class="text-muted">
+                    <li><strong>PAINS</strong> (Pan Assay INterference compoundS): Identifies compounds that may interfere with biological assays</li>
+                    <li><strong>Brenk Filter</strong>: Screens for known toxic or reactive functional groups (mutagenic, carcinogenic, unstable)</li>
+                </ul>
+            </div>
+        </div>
+        
+        <!-- Lipinski's Rule of 5 -->
+        <div class="analyzer-card">
+            <h3><i class="fas fa-check-circle"></i> Lipinski's Rule of 5</h3>
+            <div id="lipinskiResults"></div>
+            <div class="mt-3">
+                <p class="text-muted mb-2">
+                    <strong>Rules for Oral Bioavailability:</strong>
+                </p>
+                <ul class="text-muted">
+                    <li>Molecular Weight ≤ 500 Da</li>
+                    <li>LogP ≤ 5 (lipophilicity)</li>
+                    <li>Hydrogen Bond Donors ≤ 5</li>
+                    <li>Hydrogen Bond Acceptors ≤ 10</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://3Dmol.org/build/3Dmol-min.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.getElementById('analyzerForm');
+    const smilesInput = document.getElementById('smilesInput');
+    const resultsSection = document.getElementById('resultsSection');
+    
+    // Example SMILES click handlers
+    document.querySelectorAll('.example-smiles').forEach(el => {
+        el.addEventListener('click', function() {
+            smilesInput.value = this.getAttribute('data-smiles');
+        });
+    });
+    
+    // Form submission
+    form.addEventListener('submit', async function(e) {
+        e.preventDefault();
+        
+        const smiles = smilesInput.value.trim();
+        if (!smiles) {
+            alert('Please enter a SMILES string');
+            return;
+        }
+        
+        // Hide results while processing
+        resultsSection.classList.remove('show');
+        
+        try {
+            const response = await fetch('{% url "molecules:analyze_compound" %}', {
+                method: 'POST',
+                credentials: 'same-origin',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'X-CSRFToken': '{{ csrf_token }}'
+                },
+                body: JSON.stringify({ smiles: smiles })
+            });
+
+            console.log('Response status:', response.status);
+            const contentType = response.headers.get('content-type') || '';
+            let data;
+
+            if (contentType.includes('application/json')) {
+                data = await response.json();
+            } else {
+                const text = await response.text();
+                throw new Error(`Unexpected response (status ${response.status}): ${text.slice(0, 300)}`);
+            }
+
+            console.log('Full response data:', JSON.stringify(data, null, 2));
+            
+            // Log drawing availability for diagnostics
+            if (data.draw_available) {
+                if (data.image_2d) {
+                    console.log('%c✅ 2D Rendering: Success (PIL backend)', 'color: green; font-weight: bold');
+                } else {
+                    console.log('%c⚠️ 2D Rendering: Draw available but rendering failed', 'color: orange; font-weight: bold');
+                    console.log('%cℹ️ Check Django logs for details', 'color: blue');
+                }
+            } else {
+                console.log('%c❌ 2D Rendering: RDKit Draw module unavailable', 'color: red; font-weight: bold');
+                console.log('%cℹ️ See FIX_WINDOWS_2D_RENDERING.md for solutions', 'color: blue');
+            }
+
+            if (data.error) {
+                alert('Error: ' + data.error);
+                return;
+            }
+
+            if (!response.ok) {
+                alert('Server error: ' + (data.error || 'Unknown error'));
+                return;
+            }
+
+            // Display results
+            displayResults(data);
+
+            // Show results
+            resultsSection.classList.add('show');
+
+            // Scroll to results
+            resultsSection.scrollIntoView({ behavior: 'smooth' });
+
+        } catch (error) {
+            console.error('Error:', error);
+            alert('An error occurred during analysis: ' + error.message);
+        }
+    });
+    
+    function displayResults(data) {
+        console.log('Received data:', data);
+        
+        // Basic Information
+        document.getElementById('molecularFormula').textContent = data.descriptors?.molecular_formula || 'N/A';
+        document.getElementById('smilesDisplay').textContent = data.smiles || 'N/A';
+        document.getElementById('molecularWeight').textContent = data.descriptors?.molecular_weight ? `${data.descriptors.molecular_weight} g/mol` : 'N/A';
+        
+        // 2D Structure
+        const image2dEl = document.getElementById('image2d');
+        const structure2dDiv = document.getElementById('structure2d');
+        if (data.image_2d) {
+            image2dEl.src = data.image_2d;
+            image2dEl.style.display = 'block';
+            // Remove any previous message
+            const msg = structure2dDiv.querySelector('.alert');
+            if (msg) msg.remove();
+        } else {
+            image2dEl.style.display = 'none';
+            // Show helpful message if not already present
+            let msg = structure2dDiv.querySelector('.alert');
+            if (!msg) {
+                msg = document.createElement('div');
+                msg.className = 'alert alert-warning';
+                msg.innerHTML = `
+                    <i class="fas fa-exclamation-triangle"></i> <strong>2D Rendering Blocked by Windows Security</strong>
+                    <p class="mt-2 mb-2">Windows Defender blocked RDKit's drawing library (rdMolDraw2D.dll).</p>
+                    <p class="mb-2"><strong>Quick Fix:</strong></p>
+                    <ol class="mb-2">
+                        <li>Open <strong>Windows Security</strong> → <strong>Virus & threat protection</strong></li>
+                        <li>Go to <strong>Manage settings</strong> → <strong>Exclusions</strong></li>
+                        <li>Add exclusion for folder: <code>C:\\Users\\yadav\\OneDrive\\Desktop\\DD\\.venv</code></li>
+                        <li>Restart Django server</li>
+                    </ol>
+                    <p class="mb-0">
+                        <small>See <strong>FIX_WINDOWS_2D_RENDERING.md</strong> in project root for detailed instructions.</small>
+                    </p>
+                `;
+                structure2dDiv.appendChild(msg);
+            }
+        }
+        
+        // 3D Structure
+        if (data.has_3d && data.mol_block) {
+            display3DStructure(data.mol_block);
+            document.getElementById('3d-status').textContent = 'Interactive 3D structure generated successfully. Drag to rotate, scroll to zoom.';
+        } else {
+            document.getElementById('3d-status').textContent = 'Unable to generate 3D structure: ' + (data.mol_block || 'Unknown error');
+        }
+        
+        // Descriptors
+        displayDescriptors(data.descriptors);
+        
+        // Solubility
+        displaySolubility(data.solubility);
+        
+        // Toxicity
+        displayToxicity(data.toxicity);
+        
+        // Lipinski
+        displayLipinski(data.lipinski);
+    }
+    
+    function display3DStructure(molBlock) {
+        const container = document.getElementById('viewer-3d');
+        container.innerHTML = ''; // Clear previous
+        
+        // Detect theme
+        const isDark = document.documentElement.getAttribute('data-theme') === 'dark' ||
+                      document.body.classList.contains('theme-dark');
+        
+        const viewer = $3Dmol.createViewer(container, {
+            backgroundColor: isDark ? '#1a1a1a' : 'white'
+        });
+        
+        viewer.addModel(molBlock, 'mol');
+        viewer.setStyle({}, {
+            stick: { radius: 0.15 },
+            sphere: { scale: 0.25 }
+        });
+        viewer.zoomTo();
+        viewer.render();
+    }
+    
+    function displayDescriptors(descriptors) {
+        const grid = document.getElementById('descriptorsGrid');
+        grid.innerHTML = '';
+        
+        // Check if descriptors exists
+        if (!descriptors) {
+            grid.innerHTML = '<p class="text-danger">No descriptor data available</p>';
+            return;
+        }
+        
+        const items = [
+            { label: 'Molecular Weight', value: (descriptors.molecular_weight || 0) + ' Da', icon: 'fa-weight-hanging' },
+            { label: 'LogP (Lipophilicity)', value: descriptors.logp || 0, icon: 'fa-oil-can' },
+            { label: 'TPSA', value: (descriptors.tpsa || 0) + ' Ų', icon: 'fa-circle' },
+            { label: 'H-Bond Donors', value: descriptors.h_bond_donors || 0, icon: 'fa-link' },
+            { label: 'H-Bond Acceptors', value: descriptors.h_bond_acceptors || 0, icon: 'fa-link' },
+            { label: 'Rotatable Bonds', value: descriptors.rotatable_bonds || 0, icon: 'fa-sync' },
+            { label: 'Aromatic Rings', value: descriptors.aromatic_rings || 0, icon: 'fa-ring' },
+            { label: 'Heavy Atoms', value: descriptors.heavy_atoms || 0, icon: 'fa-atom' }
+        ];
+        
+        items.forEach(item => {
+            const div = document.createElement('div');
+            div.className = 'property-item';
+            div.innerHTML = `
+                <div class="property-label"><i class="fas ${item.icon}"></i> ${item.label}</div>
+                <div class="property-value">${item.value}</div>
+            `;
+            grid.appendChild(div);
+        });
+    }
+    
+    function displaySolubility(sol) {
+        const container = document.getElementById('solubilityResults');
+        
+        if (!sol) {
+            container.innerHTML = '<p class="text-danger">No solubility data available</p>';
+            return;
+        }
+        
+        const classColor = {
+            'Highly Soluble': 'success',
+            'Soluble': 'success',
+            'Moderately Soluble': 'warning',
+            'Poorly Soluble': 'warning',
+            'Insoluble': 'danger'
+        };
+        
+        container.innerHTML = `
+            <div class="alert alert-${classColor[sol.classification] || 'info'}">
+                <h4><i class="fas fa-flask"></i> ${sol.classification}</h4>
+                <div class="mt-3">
+                    <p><strong>LogS:</strong> ${sol.log_s}</p>
+                    <p><strong>Solubility:</strong> ${sol.solubility_mg_per_ml} mg/mL (${sol.solubility_mol_per_l} mol/L)</p>
+                    <p class="mb-0"><strong>Method:</strong> ${sol.method}</p>
+                </div>
+            </div>
+        `;
+    }
+    
+    function displayToxicity(tox) {
+        const container = document.getElementById('toxicityResults');
+        
+        if (!tox) {
+            container.innerHTML = '<p class="text-danger">No toxicity data available</p>';
+            return;
+        }
+        
+        const riskClass = {
+            'Low': 'risk-low',
+            'Moderate': 'risk-moderate',
+            'High': 'risk-high'
+        };
+        
+        let alertsHtml = '';
+        if (tox.pains_alerts.length > 0) {
+            alertsHtml += '<h5>PAINS Alerts:</h5><ul>';
+            tox.pains_alerts.forEach(alert => {
+                alertsHtml += `<li>${alert}</li>`;
+            });
+            alertsHtml += '</ul>';
+        }
+        
+        if (tox.brenk_alerts.length > 0) {
+            alertsHtml += '<h5>Brenk Alerts:</h5><ul>';
+            tox.brenk_alerts.forEach(alert => {
+                alertsHtml += `<li>${alert}</li>`;
+            });
+            alertsHtml += '</ul>';
+        }
+        
+        if (tox.total_alerts === 0) {
+            alertsHtml = '<p class="text-success"><i class="fas fa-check-circle"></i> No structural alerts detected. This compound passed both PAINS and Brenk toxicity filters.</p>';
+        }
+        
+        container.innerHTML = `
+            <div class="mb-3">
+                <span class="alert-badge ${riskClass[tox.risk_level]}">
+                    Risk Level: ${tox.risk_level}
+                </span>
+                <span class="alert-badge ${riskClass[tox.risk_level]}">
+                    ${tox.total_alerts} Alert(s) Found
+                </span>
+            </div>
+            ${alertsHtml}
+        `;
+    }
+    
+    function displayLipinski(lipinski) {
+        const container = document.getElementById('lipinskiResults');
+        
+        if (!lipinski) {
+            container.innerHTML = '<p class="text-danger">No Lipinski data available</p>';
+            return;
+        }
+        
+        let violationsHtml = '';
+        if (lipinski.violations.length > 0) {
+            violationsHtml = '<h5>Violations:</h5><ul>';
+            lipinski.violations.forEach(violation => {
+                violationsHtml += `<li class="text-danger">${violation}</li>`;
+            });
+            violationsHtml += '</ul>';
+        } else {
+            violationsHtml = '<p class="text-success"><i class="fas fa-check-circle"></i> All criteria passed!</p>';
+        }
+        
+        const statusClass = lipinski.compliant ? 'success' : 'warning';
+        
+        container.innerHTML = `
+            <div class="alert alert-${statusClass}">
+                <h4><i class="fas ${lipinski.compliant ? 'fa-check' : 'fa-exclamation-triangle'}"></i> ${lipinski.interpretation}</h4>
+                <p><strong>Violations:</strong> ${lipinski.num_violations}/4</p>
+                ${violationsHtml}
+            </div>
+        `;
+    }
+});
+</script>
+{% endblock %}

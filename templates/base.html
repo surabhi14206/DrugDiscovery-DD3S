@@ -1,0 +1,532 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="{% if user.is_authenticated %}{% if user.preferences %}{{ user.preferences.theme }}{% else %}light{% endif %}{% else %}light{% endif %}">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}DD3S - Molecular Database{% endblock %}</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    {% load static %}
+    <link rel="stylesheet" href="{% static 'css/style.css' %}?v=202601211240">
+    {% block extra_css %}{% endblock %}
+</head>
+<body class="theme-{% if user.is_authenticated %}{% if user.preferences %}{{ user.preferences.theme }}{% else %}light{% endif %}{% else %}light{% endif %}">
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg">
+        <div class="container">
+            <a class="navbar-brand" href="{% url 'visualization:home' %}">
+                <i class="fas fa-atom"></i> DD3S
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav me-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'visualization:home' %}">
+                            <i class="fas fa-home"></i> Home
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'visualization:search' %}">
+                            <i class="fas fa-search"></i> Search
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'visualization:design' %}">
+                            <i class="fas fa-pencil-ruler"></i> Design
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'molecules:compound_analyzer' %}">
+                            <i class="fas fa-flask"></i> Analyzer
+                        </a>
+                    </li>
+                </ul>
+                <ul class="navbar-nav">
+                    {% if user.is_authenticated %}
+                        <!-- Profile Dropdown -->
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle d-flex align-items-center" href="#" id="profileDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                <i class="fas fa-user-circle me-2"></i>
+                                <span>{{ user.username }}</span>
+                            </a>
+                            <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="profileDropdown">
+                                <li>
+                                    <a class="dropdown-item" href="{% url 'authentication:profile' %}">
+                                        <i class="fas fa-id-card me-2"></i> My Profile
+                                    </a>
+                                </li>
+                                <li>
+                                    <a class="dropdown-item" href="{% url 'visualization:dashboard' %}">
+                                        <i class="fas fa-chart-line me-2"></i> Dashboard
+                                    </a>
+                                </li>
+                                <li><hr class="dropdown-divider"></li>
+                                <li>
+                                    <a class="dropdown-item" href="{% url 'visualization:about' %}">
+                                        <i class="fas fa-info-circle me-2"></i> About
+                                    </a>
+                                </li>
+                                <li>
+                                    <a class="dropdown-item" href="{% url 'visualization:contact' %}">
+                                        <i class="fas fa-envelope me-2"></i> Contact
+                                    </a>
+                                </li>
+                                <li>
+                                    <a class="dropdown-item" href="#" data-bs-toggle="modal" data-bs-target="#supportModal">
+                                        <i class="fas fa-life-ring me-2"></i> Support
+                                    </a>
+                                </li>
+                                <li><hr class="dropdown-divider"></li>
+                                <li>
+                                    <a class="dropdown-item text-danger" href="{% url 'authentication:logout' %}">
+                                        <i class="fas fa-sign-out-alt me-2"></i> Logout
+                                    </a>
+                                </li>
+                            </ul>
+                        </li>
+                    {% else %}
+                        <li class="nav-item">
+                            <a class="nav-link btn btn-primary text-white px-3" href="{% url 'authentication:auth' %}">
+                                <i class="fas fa-sign-in-alt me-1"></i> Login / Register
+                            </a>
+                        </li>
+                    {% endif %}
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Contact Modal -->
+    <div class="modal fade" id="contactModal" tabindex="-1" aria-labelledby="contactModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="contactModalLabel">
+                        <i class="fas fa-envelope"></i> Contact Us
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="contactForm">
+                        <div class="mb-3">
+                            <label for="contactName" class="form-label">Name</label>
+                            <input type="text" class="form-control" id="contactName" value="{% if user.is_authenticated %}{{ user.get_full_name|default:user.username }}{% endif %}" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="contactEmail" class="form-label">Email</label>
+                            <input type="email" class="form-control" id="contactEmail" value="{% if user.is_authenticated %}{{ user.email }}{% endif %}" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="contactSubject" class="form-label">Subject</label>
+                            <input type="text" class="form-control" id="contactSubject" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="contactMessage" class="form-label">Message</label>
+                            <textarea class="form-control" id="contactMessage" rows="4" required></textarea>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    <button type="button" class="btn btn-primary" onclick="submitContact()">
+                        <i class="fas fa-paper-plane"></i> Send Message
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Support Modal -->
+    <div class="modal fade" id="supportModal" tabindex="-1" aria-labelledby="supportModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="supportModalLabel">
+                        <i class="fas fa-life-ring"></i> Support Center
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <h6 class="mb-3"><i class="fas fa-question-circle"></i> How can we help you?</h6>
+                    <div class="accordion" id="supportAccordion">
+                        <div class="accordion-item">
+                            <h2 class="accordion-header" id="headingOne">
+                                <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#collapseOne" aria-expanded="true" aria-controls="collapseOne">
+                                    <i class="fas fa-book me-2"></i> Getting Started
+                                </button>
+                            </h2>
+                            <div id="collapseOne" class="accordion-collapse collapse show" aria-labelledby="headingOne" data-bs-parent="#supportAccordion">
+                                <div class="accordion-body">
+                                    Welcome to DD3S! Start by exploring molecules using the Search feature, analyze compounds with our Analyzer tool, and visualize 3D structures.
+                                </div>
+                            </div>
+                        </div>
+                        <div class="accordion-item">
+                            <h2 class="accordion-header" id="headingTwo">
+                                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseTwo" aria-expanded="false" aria-controls="collapseTwo">
+                                    <i class="fas fa-flask me-2"></i> Using the Analyzer
+                                </button>
+                            </h2>
+                            <div id="collapseTwo" class="accordion-collapse collapse" aria-labelledby="headingTwo" data-bs-parent="#supportAccordion">
+                                <div class="accordion-body">
+                                    Enter a SMILES string to analyze molecular properties, calculate solubility, check toxicity alerts, and verify Lipinski's Rule of 5 compliance.
+                                </div>
+                            </div>
+                        </div>
+                        <div class="accordion-item">
+                            <h2 class="accordion-header" id="headingThree">
+                                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseThree" aria-expanded="false" aria-controls="collapseThree">
+                                    <i class="fas fa-headset me-2"></i> Technical Support
+                                </button>
+                            </h2>
+                            <div id="collapseThree" class="accordion-collapse collapse" aria-labelledby="headingThree" data-bs-parent="#supportAccordion">
+                                <div class="accordion-body">
+                                    <p>For technical issues, please provide:</p>
+                                    <ul>
+                                        <li>Detailed description of the problem</li>
+                                        <li>Steps to reproduce</li>
+                                        <li>Browser and device information</li>
+                                    </ul>
+                                    <p>Email: support@pdbclone.com</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="mt-3 p-3 bg-light rounded">
+                        <p class="mb-2"><strong><i class="fas fa-clock me-2"></i> Support Hours:</strong></p>
+                        <p class="mb-1">Monday - Friday: 9:00 AM - 6:00 PM EST</p>
+                        <p class="mb-0">Weekend: Emergency support only</p>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    <button type="button" class="btn btn-primary" data-bs-dismiss="modal" data-bs-toggle="modal" data-bs-target="#contactModal">
+                        <i class="fas fa-envelope"></i> Contact Support
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Messages (Right-aligned toast notifications) -->
+    {% if messages %}
+    <div class="toast-container position-fixed top-0 end-0 p-3" style="z-index: 9999; margin-top: 70px;">
+        {% for message in messages %}
+        <div class="alert alert-{{ message.tags }} alert-dismissible fade show shadow-lg" role="alert" style="min-width: 300px; max-width: 400px;">
+            <strong>{% if message.tags == 'danger' %}<i class="fas fa-exclamation-circle"></i>{% elif message.tags == 'success' %}<i class="fas fa-check-circle"></i>{% elif message.tags == 'warning' %}<i class="fas fa-exclamation-triangle"></i>{% elif message.tags == 'info' %}<i class="fas fa-info-circle"></i>{% endif %}</strong> {{ message }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    <!-- Content -->
+    <main class="py-4">
+        {% block content %}{% endblock %}
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-dark text-white mt-5 py-4">
+        <div class="container text-center">
+            <p>&copy; 2026 DrugDiscovery Platform. Built with Django & AI.</p>
+            <p class="mb-2">
+                <a href="{% url 'authentication:terms' %}" class="text-white me-3"><i class="fas fa-file-contract"></i> Terms & Conditions</a>
+                <a href="{% url 'visualization:about' %}" class="text-white me-3"><i class="fas fa-info-circle"></i> About</a>
+                <a href="#" class="text-white" data-bs-toggle="modal" data-bs-target="#contactModal"><i class="fas fa-envelope"></i> Contact</a>
+            </p>
+            <p>
+                <a href="#" class="text-white me-3"><i class="fab fa-github"></i></a>
+                <a href="#" class="text-white me-3"><i class="fab fa-twitter"></i></a>
+                <a href="#" class="text-white"><i class="fab fa-linkedin"></i></a>
+            </p>
+        </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="{% static 'js/main.js' %}"></script>
+    <script>
+        // Setup CSRF token for all AJAX requests
+        function getCookie(name) {
+            let cookieValue = null;
+            if (document.cookie && document.cookie !== '') {
+                const cookies = document.cookie.split(';');
+                for (let i = 0; i < cookies.length; i++) {
+                    const cookie = cookies[i].trim();
+                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                        break;
+                    }
+                }
+            }
+            return cookieValue;
+        }
+        
+        // Make CSRF token globally available
+        window.csrftoken = getCookie('csrftoken');
+
+        // Submit contact form
+        function submitContact() {
+            const name = document.getElementById('contactName').value;
+            const email = document.getElementById('contactEmail').value;
+            const subject = document.getElementById('contactSubject').value;
+            const message = document.getElementById('contactMessage').value;
+
+            if (!name || !email || !subject || !message) {
+                alert('Please fill in all fields');
+                return;
+            }
+
+            // Here you can add AJAX call to send the contact form
+            // For now, we'll just show a success message
+            alert('Thank you for contacting us! We will get back to you soon.');
+            
+            // Close modal and reset form
+            const modal = bootstrap.Modal.getInstance(document.getElementById('contactModal'));
+            modal.hide();
+            document.getElementById('contactForm').reset();
+        }
+        
+        // Auto-dismiss alerts after 5 seconds (only dismissible notification messages)
+        document.addEventListener('DOMContentLoaded', function() {
+            const alerts = document.querySelectorAll('.alert.alert-dismissible');
+            alerts.forEach(function(alert) {
+                setTimeout(function() {
+                    const bsAlert = new bootstrap.Alert(alert);
+                    bsAlert.close();
+                }, 5000); // 5 seconds
+            });
+        });
+    </script>
+    {% block extra_js %}{% endblock %}
+    
+    {% if user.is_authenticated %}
+    <!-- Notification System -->
+    <div id="notificationPopup" class="notification-popup"></div>
+    
+    <style>
+        .notification-popup {
+            position: fixed;
+            top: 80px;
+            right: 20px;
+            max-width: 400px;
+            z-index: 9999;
+        }
+        .notification-item {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            padding: 16px 20px;
+            margin-bottom: 12px;
+            border-left: 4px solid #0d6efd;
+            animation: slideIn 0.3s ease-out;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .notification-item:hover {
+            transform: translateX(-5px);
+            box-shadow: 0 6px 16px rgba(0,0,0,0.2);
+        }
+        .notification-item.success {
+            border-left-color: #28a745;
+        }
+        .notification-item.warning {
+            border-left-color: #ffc107;
+        }
+        .notification-item.policy {
+            border-left-color: #fd7e14;
+        }
+        .notification-item.feature {
+            border-left-color: #6610f2;
+        }
+        .notification-title {
+            font-weight: 600;
+            margin-bottom: 5px;
+            color: #2c3e50;
+            display: flex;
+            justify-content: space-between;
+            align-items-center;
+        }
+        .notification-message {
+            font-size: 14px;
+            color: #6c757d;
+        }
+        .notification-close {
+            background: none;
+            border: none;
+            font-size: 18px;
+            color: #aaa;
+            cursor: pointer;
+            padding: 0;
+            margin-left: 10px;
+        }
+        .notification-close:hover {
+            color: #333;
+        }
+        @keyframes slideIn {
+            from {
+                transform: translateX(400px);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+        @keyframes slideOut {
+            from {
+                transform: translateX(0);
+                opacity: 1;
+            }
+            to {
+                transform: translateX(400px);
+                opacity: 0;
+            }
+        }
+        .notification-item.closing {
+            animation: slideOut 0.3s ease-out forwards;
+        }
+        
+        /* Dark theme support */
+        [data-theme="dark"] .notification-item,
+        .theme-dark .notification-item {
+            background: #2d2d2d;
+            color: #e0e0e0;
+        }
+        [data-theme="dark"] .notification-title,
+        .theme-dark .notification-title {
+            color: #e0e0e0;
+        }
+        [data-theme="dark"] .notification-message,
+        .theme-dark .notification-message {
+            color: #b0b0b0;
+        }
+    </style>
+    
+    <script>
+        // Notification System
+        class NotificationManager {
+            constructor() {
+                this.container = document.getElementById('notificationPopup');
+                this.checkInterval = 30000; // Check every 30 seconds
+                this.init();
+            }
+            
+            init() {
+                // Check for new notifications on load
+                this.fetchNotifications();
+                
+                // Periodically check for new notifications
+                setInterval(() => this.fetchNotifications(), this.checkInterval);
+            }
+            
+            async fetchNotifications() {
+                try {
+                    const response = await fetch('{% url "admin_dashboard:get_notifications" %}');
+                    const data = await response.json();
+                    
+                    if (data.count > 0) {
+                        data.notifications.forEach(notification => {
+                            this.showNotification(notification);
+                        });
+                    }
+                } catch (error) {
+                    console.error('Error fetching notifications:', error);
+                }
+            }
+            
+            showNotification(notification) {
+                // Check if notification already displayed
+                if (document.querySelector(`[data-notification-id="${notification.id}"]`)) {
+                    return;
+                }
+                
+                const div = document.createElement('div');
+                div.className = `notification-item ${notification.type}`;
+                div.setAttribute('data-notification-id', notification.id);
+                
+                const icons = {
+                    'success': '✓',
+                    'warning': '⚠',
+                    'policy': '📋',
+                    'feature': '✨',
+                    'update': '🔄',
+                    'info': 'ℹ'
+                };
+                
+                const icon = icons[notification.type] || 'ℹ';
+                
+                div.innerHTML = `
+                    <div class="notification-title">
+                        <span>${icon} ${notification.title}</span>
+                        <button class="notification-close" onclick="notificationManager.dismissNotification(${notification.id}, this.parentElement.parentElement)">&times;</button>
+                    </div>
+                    <div class="notification-message">${notification.message}</div>
+                `;
+                
+                div.onclick = (e) => {
+                    if (e.target.tagName !== 'BUTTON') {
+                        this.dismissNotification(notification.id, div);
+                    }
+                };
+                
+                this.container.appendChild(div);
+                
+                // Auto-dismiss after 8 seconds
+                setTimeout(() => {
+                    if (div.parentElement) {
+                        this.dismissNotification(notification.id, div);
+                    }
+                }, 8000);
+            }
+            
+            async dismissNotification(id, element) {
+                // Mark as read on server
+                try {
+                    await fetch(`/admin-dashboard/api/notifications/${id}/read/`, {
+                        method: 'POST',
+                        headers: {
+                            'X-CSRFToken': getCookie('csrftoken'),
+                            'Content-Type': 'application/json'
+                        }
+                    });
+                } catch (error) {
+                    console.error('Error marking notification as read:', error);
+                }
+                
+                // Remove from UI
+                element.classList.add('closing');
+                setTimeout(() => {
+                    if (element.parentElement) {
+                        element.remove();
+                    }
+                }, 300);
+            }
+        }
+        
+        // Helper function to get CSRF token
+        function getCookie(name) {
+            let cookieValue = null;
+            if (document.cookie && document.cookie !== '') {
+                const cookies = document.cookie.split(';');
+                for (let i = 0; i < cookies.length; i++) {
+                    const cookie = cookies[i].trim();
+                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                        break;
+                    }
+                }
+            }
+            return cookieValue;
+        }
+        
+        // Initialize notification manager
+        const notificationManager = new NotificationManager();
+    </script>
+    {% endif %}
+
+    {# Page-specific scripts (e.g., Google CSE widget) #}
+    {% block scripts %}{% endblock %}
+</body>
+</html>

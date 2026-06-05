@@ -1,0 +1,449 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Search Molecules - Molecular Database{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <!-- Page Header -->
+    <div class="row mb-5 text-center">
+        <div class="col-lg-8 mx-auto">
+            <h1 class="fw-bold mb-2" style="font-family: 'Outfit', sans-serif; color: var(--text-color, #2c3e50);">
+                Literature & External Insights
+            </h1>
+            <p style="font-size: 1.1rem; color: var(--text-muted, #6c757d);">
+                Search scientific literature, clinical trials, and research papers.
+            </p>
+        </div>
+    </div>
+
+    <!-- Main Search Card - Literature Search Only -->
+    <div class="row mb-5">
+        <div class="col-lg-9 mx-auto">
+            <div class="search-card-bg p-4 rounded-4 shadow-lg border">
+                <div class="d-flex align-items-center justify-content-between mb-4">
+                    <h5 class="mb-0 fw-bold" style="color: var(--text-color, #2c3e50);">
+                        <i class="fas fa-book-open text-primary me-2"></i>Literature & External Insights
+                    </h5>
+                    <div class="d-flex align-items-center gap-2">
+                        <span class="badge bg-primary-subtle text-primary rounded-pill px-3">Live Search</span>
+                        <span class="badge bg-light text-primary border px-3 d-flex align-items-center gap-1">
+                            <i class="fas fa-globe"></i> Web Literature
+                        </span>
+                    </div>
+                </div>
+
+                <!-- Search Input -->
+                <div class="input-group mb-3">
+                    <span class="input-group-text search-input-addon border-end-0 ps-3">
+                        <i class="fas fa-search text-muted"></i>
+                    </span>
+                    <input type="text" id="webSearchInput" class="form-control search-input-field border-start-0 ps-0"
+                        placeholder="Find papers, patents, or clinical trials..." style="height: 50px;">
+                    <button class="btn btn-primary px-4" id="btnWebSearch">Find Content</button>
+                </div>
+
+                <!-- Quick Try Examples -->
+                <div class="d-flex flex-wrap align-items-center gap-2 px-1">
+                    <small class="text-muted fw-bold me-1"><i class="fas fa-bolt text-warning me-1"></i> Quick
+                        Try:</small>
+                    <a href="#" onclick="searchQuick('Aspirin'); return false;"
+                        class="badge bg-white text-secondary border text-decoration-none px-3 py-2 shadow-sm d-flex align-items-center hover-badge">
+                        <i class="fas fa-capsules me-2 text-danger"></i> Aspirin
+                    </a>
+                    <a href="#" onclick="searchQuick('1A2B'); return false;"
+                        class="badge bg-white text-secondary border text-decoration-none px-3 py-2 shadow-sm d-flex align-items-center hover-badge">
+                        <i class="fas fa-cube me-2 text-primary"></i> PDB: 1A2B
+                    </a>
+                    <a href="#" onclick="searchQuick('Gefitinib'); return false;"
+                        class="badge bg-white text-secondary border text-decoration-none px-3 py-2 shadow-sm d-flex align-items-center hover-badge">
+                        <i class="fas fa-dna me-2 text-success"></i> Gefitinib
+                    </a>
+                </div>
+
+
+                <!-- Progress Line -->
+                <div class="mt-3"
+                    style="height: 4px; background: linear-gradient(90deg, #0d6efd, #6610f2); width: 100%; border-radius: 2px;">
+                </div>
+
+                <!-- Loading -->
+                <div id="webLoadingSpinner" class="text-center py-5" style="display: none;">
+                    <div class="spinner-grow text-primary" style="width: 3rem; height: 3rem;" role="status"></div>
+                    <p class="text-muted mt-3 fw-medium">Scanning external databases...</p>
+                </div>
+
+                <!-- Results Feed -->
+                <div id="webSearchResults" class="web-results-feed mt-4">
+                    <div class="text-center py-4" style="color: var(--text-muted, #6c757d);">
+                        <i class="fas fa-arrow-up mb-2"></i>
+                        <p>Enter a specific topic above to browse scientific literature.</p>
+                    </div>
+                </div>
+
+                {% if google_cse_id %}
+                <div id="googleWidgetInline" class="mt-4" style="display: none;">
+                    <div class="search-card-bg p-3 rounded-3 border">
+                        <h6 class="fw-bold mb-2" style="color: var(--text-color, #2c3e50);">
+                            <i class="fas fa-search text-primary me-2"></i> Google Research Search (fallback)
+                        </h6>
+                        <div class="gcse-search"></div>
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Styles for Premium Components -->
+    <style>
+        /* Dark mode support */
+        .search-card-bg {
+            background: var(--card-bg, #ffffff);
+            border-color: var(--border-color, #f0f2f5) !important;
+        }
+
+        .search-input-addon {
+            background: var(--card-bg, #ffffff);
+            border-color: var(--border-color, #dee2e6);
+        }
+
+        .search-input-field {
+            background: var(--card-bg, #ffffff);
+            color: var(--text-color, #212529);
+            border-color: var(--border-color, #dee2e6);
+        }
+
+        .search-input-field::placeholder {
+            color: var(--text-muted, #6c757d);
+            opacity: 0.7;
+        }
+
+        .hover-badge:hover {
+            background-color: #f8f9fa !important;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1) !important;
+            transition: all 0.2s;
+        }
+
+        [data-theme="dark"] .hover-badge:hover,
+        .theme-dark .hover-badge:hover {
+            background-color: #343a40 !important;
+        }
+
+        .web-results-feed {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .web-result-card {
+            background: var(--card-bg, #ffffff);
+            border: 1px solid var(--border-color, #f0f2f5);
+            padding: 20px;
+            border-radius: 12px;
+            transition: all 0.3s cubic-bezier(0.165, 0.84, 0.44, 1);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .web-result-card::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            width: 4px;
+            background: #0d6efd;
+            border-top-left-radius: 4px;
+            border-bottom-left-radius: 4px;
+        }
+
+        .web-result-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.05);
+            border-color: #e9ecef;
+        }
+
+        /* Custom Stretched Link */
+        .stretched-link-custom::after {
+            position: absolute;
+            top: 0;
+            right: 0;
+            bottom: 0;
+            left: 0;
+            z-index: 1;
+            content: "";
+        }
+
+        .web-result-card {
+            position: relative;
+        }
+
+        .source-badge {
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            font-weight: 700;
+            padding: 4px 8px;
+            border-radius: 6px;
+        }
+
+        .source-pubmed {
+            background: #e3f2fd;
+            color: #1565c0;
+        }
+
+        .source-patents {
+            background: #fff3e0;
+            color: #ef6c00;
+        }
+
+        .source-nature {
+            background: #e8f5e9;
+            color: #2e7d32;
+        }
+
+        .source-generic {
+            background: var(--source-generic-bg, #f5f5f5);
+            color: var(--source-generic-color, #616161);
+            border: 1px solid var(--source-generic-border, #e0e0e0);
+        }
+
+        /* Improve badge contrast in dark mode (e.g., Crossref) */
+        [data-theme="dark"] .source-generic,
+        .theme-dark .source-generic {
+            --source-generic-bg: #3a3f4b;
+            --source-generic-color: #e6ecf5;
+            --source-generic-border: #4a5260;
+        }
+
+        .source-wikipedia {
+            background: #f8f9fa;
+            color: #6c757d;
+            border: 1px solid #dee2e6;
+        }
+
+        .source-pubchem {
+            background: #e0f2f1;
+            color: #00695c;
+        }
+
+        .source-chembl {
+            background: #f3e5f5;
+            color: #7b1fa2;
+        }
+
+        .form-control:focus {
+            box-shadow: none;
+            background-color: var(--card-bg, #ffffff) !important;
+            border-color: var(--border-color, #dee2e6);
+        }
+
+        #webToggleBtn[aria-expanded="true"] .fa-chevron-down {
+            transform: rotate(180deg);
+        }
+
+        .fa-chevron-down {
+            transition: transform 0.3s;
+        }
+    </style>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const webInput = document.getElementById('webSearchInput');
+            const webBtn = document.getElementById('btnWebSearch');
+            const resultsDiv = document.getElementById('webSearchResults');
+            const spinner = document.getElementById('webLoadingSpinner');
+            const googleWidget = document.getElementById('googleWidgetInline');
+
+            let allResults = [];
+
+            // Quick search function
+            window.searchQuick = function (query) {
+                webInput.value = query;
+                fetchWebResults(query);
+            };
+
+            // Debounce
+            function debounce(func, wait) {
+                let timeout;
+                return function (...args) {
+                    const later = () => {
+                        clearTimeout(timeout);
+                        func(...args);
+                    };
+                    clearTimeout(timeout);
+                    timeout = setTimeout(later, wait);
+                };
+            }
+
+            // Real Web Search Logic
+            async function fetchWebResults(query) {
+                if (!query || query.length < 2) return;
+
+                resultsDiv.style.opacity = '0.5';
+                spinner.style.display = 'block';
+                resultsDiv.innerHTML = ''; // Clear previous
+                if (googleWidget) googleWidget.style.display = 'none';
+
+                try {
+                    const response = await fetch(`/api/web-search/?q=${encodeURIComponent(query)}`);
+                    const data = await response.json();
+
+                    allResults = data.results || [];
+                    renderResults(allResults);
+
+                    if (!allResults.length && googleWidget) {
+                        resultsDiv.innerHTML = '<div class="text-center text-muted py-3">No relevant literature found via API. Falling back to Google widget below.</div>';
+                        googleWidget.style.display = 'block';
+                    } else if (!allResults.length) {
+                        resultsDiv.innerHTML = '<div class="text-center text-muted py-3">No relevant literature found.</div>';
+                    }
+
+                    // Cache the results and query (store JSON rather than HTML now)
+                    sessionStorage.setItem('lastWebQuery', query);
+                    sessionStorage.setItem('lastWebResults', JSON.stringify(allResults));
+
+                } catch (error) {
+                    console.error('Web search error:', error);
+                    resultsDiv.innerHTML = '<div class="alert alert-danger">Unable to fetch results. Please try again later.</div>';
+                    if (googleWidget) googleWidget.style.display = 'block';
+                } finally {
+                    spinner.style.display = 'none';
+                    resultsDiv.style.opacity = '1';
+                }
+            }
+
+            // Start search or restore from cache
+            const urlParams = new URLSearchParams(window.location.search);
+            const initialQuery = urlParams.get('q');
+
+            if (initialQuery) {
+                webInput.value = initialQuery;
+
+                // Check if we have cached results for this EXACT query
+                const cachedQuery = sessionStorage.getItem('lastWebQuery');
+                const cachedJSON = sessionStorage.getItem('lastWebResults');
+
+                if (cachedQuery === initialQuery && cachedJSON) {
+                    allResults = JSON.parse(cachedJSON);
+                    renderResults(allResults);
+                } else {
+                    fetchWebResults(initialQuery);
+                }
+            } else {
+                // Clear cache if no query (fresh start)
+                sessionStorage.removeItem('lastWebQuery');
+                sessionStorage.removeItem('lastWebResults');
+            }
+
+            const debouncedSearch = debounce((q) => fetchWebResults(q), 800);
+
+            webInput.addEventListener('input', (e) => debouncedSearch(e.target.value));
+            webBtn.addEventListener('click', () => fetchWebResults(webInput.value));
+
+            function renderResults(list) {
+                if (!list.length) {
+                    resultsDiv.innerHTML = '<div class="text-center text-muted py-3">No results match your filters.</div>';
+                    return;
+                }
+
+                resultsDiv.innerHTML = list.map((r, index) => {
+                    let sourceClass = 'source-generic';
+                    const source = r.source || 'Knowledge';
+                    if (source.includes('PubMed')) sourceClass = 'source-pubmed';
+                    else if (source.includes('Patent')) sourceClass = 'source-patents';
+                    else if (source.includes('Semantic')) sourceClass = 'source-nature';
+                    else if (source.includes('Wikipedia')) sourceClass = 'source-wikipedia';
+                    else if (source.includes('PubChem')) sourceClass = 'source-pubchem';
+                    else if (source.includes('ChEMBL')) sourceClass = 'source-chembl';
+
+                    const authors = r.authors && r.authors !== 'N/A' ? `<span class="fw-bold text-dark">Authors:</span> ${r.authors}` : '';
+                    const date = r.date && r.date !== 'N/A' ? `<span class="fw-bold text-dark ms-2">Date:</span> ${r.date}` : '';
+                    const snippet = r.snippet || "No details available.";
+
+                    const currentQuery = document.getElementById('webSearchInput').value;
+                    const summaryUrl = `/search/summary/?url=${encodeURIComponent(r.link)}&title=${encodeURIComponent(r.title)}&snippet=${encodeURIComponent(snippet)}&q=${encodeURIComponent(currentQuery)}`;
+
+                    return `
+                        <div class="web-result-card" onclick="openResultModal(${index})">
+                            <div class="d-flex align-items-center justify-content-between mb-2">
+                                <span class="source-badge ${sourceClass}">${source}</span>
+                                ${r.open_access ? '<span class="badge bg-success-subtle text-success border">Open Access</span>' : ''}
+                            </div>
+                            <h5 class="fw-bold mb-2 text-primary">${r.title}</h5>
+                            <p class="text-muted mb-2" style="font-size: 0.95rem;">${snippet.substring(0, 200)}...</p>
+                            <div class="small text-muted mb-2">${authors} ${date}</div>
+                            <div class="d-flex gap-2">
+                                <a class="btn btn-sm btn-outline-secondary" href="${summaryUrl}" target="_blank" onclick="event.stopPropagation();">
+                                    <i class="fas fa-magic me-1"></i> AI Summary
+                                </a>
+                                <a class="btn btn-sm btn-link" href="${r.link}" target="_blank" rel="noopener noreferrer" onclick="event.stopPropagation();">
+                                    Open source
+                                </a>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+            }
+
+            window.openResultModal = function (index) {
+                const r = allResults[index];
+                if (!r) return;
+                const modalTitle = document.getElementById('resultModalLabel');
+                const modalBody = document.getElementById('resultModalBody');
+                const currentQuery = document.getElementById('webSearchInput').value;
+                const summaryUrl = `/search/summary/?url=${encodeURIComponent(r.link)}&title=${encodeURIComponent(r.title)}&snippet=${encodeURIComponent(r.snippet || '')}&q=${encodeURIComponent(currentQuery)}`;
+
+                modalTitle.textContent = r.title || 'Result';
+                modalBody.innerHTML = `
+                    <p class="text-muted mb-2">${r.snippet || 'No details available.'}</p>
+                    <p class="small mb-2"><strong>Source:</strong> ${r.source || 'Unknown'} ${r.open_access ? '(Open Access)' : ''}</p>
+                    <p class="small mb-2"><strong>Authors:</strong> ${r.authors || 'N/A'}</p>
+                    <p class="small mb-3"><strong>Date:</strong> ${r.date || 'N/A'}</p>
+                    <div class="d-flex flex-wrap gap-2">
+                        <a href="${summaryUrl}" class="btn btn-primary" target="_blank"><i class="fas fa-magic me-1"></i> Open AI Summary</a>
+                        <a href="${r.link}" class="btn btn-outline-secondary" target="_blank" rel="noopener noreferrer"><i class="fas fa-external-link-alt me-1"></i> Open Source</a>
+                    </div>
+                `;
+
+                const modalEl = new bootstrap.Modal(document.getElementById('resultModal'));
+                modalEl.show();
+            }
+        });
+    </script>
+</div>
+
+<!-- Result Modal -->
+<div class="modal fade" id="resultModal" tabindex="-1" aria-labelledby="resultModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-scrollable">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="resultModalLabel">Result</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body" id="resultModalBody"></div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .hover-shadow {
+        transition: all 0.3s ease;
+    }
+
+    .hover-shadow:hover {
+        box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15) !important;
+        transform: translateY(-5px);
+    }
+
+    .input-group-lg .form-control {
+        font-size: 1.1rem;
+    }
+</style>
+{% endblock %}
+
+{% block scripts %}
+{{ block.super }}
+{% endblock %}

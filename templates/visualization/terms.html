@@ -1,0 +1,249 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Terms and Conditions - Molecular Database{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-10">
+            <!-- Header -->
+            <div class="text-center mb-5">
+                <h1 class="fw-bold mb-3" style="color: #2c3e50;">Terms and Conditions</h1>
+                <p class="text-muted">Last Updated: February 3, 2026</p>
+            </div>
+
+            <!-- Terms Content -->
+            <div class="card shadow-sm border-0 rounded-4">
+                <div class="card-body p-5">
+                    
+                    <!-- Introduction -->
+                    <section class="mb-5">
+                        <h3 class="fw-bold mb-3" style="color: #2c3e50;">1. Introduction</h3>
+                        <p class="text-muted" style="line-height: 1.8;">
+                            Welcome to the Molecular Database Platform. By accessing or using this platform, you agree to be bound by these Terms and Conditions. 
+                            This platform is designed for research and educational purposes in the field of drug discovery, cheminformatics, and molecular analysis.
+                        </p>
+                        <p class="text-muted" style="line-height: 1.8;">
+                            These terms govern your use of our services, including but not limited to molecular database access, AI-powered analysis tools, 
+                            3D visualization features, and literature search capabilities.
+                        </p>
+                    </section>
+
+                    <!-- Acceptable Use -->
+                    <section class="mb-5">
+                        <h3 class="fw-bold mb-3" style="color: #2c3e50;">2. Acceptable Use</h3>
+                        <p class="text-muted mb-3" style="line-height: 1.8;">You agree to use this platform only for lawful purposes and in accordance with these terms. You shall not:</p>
+                        <ul class="text-muted" style="line-height: 1.8;">
+                            <li>Use the platform for any illegal or unauthorized purpose</li>
+                            <li>Attempt to gain unauthorized access to any portion of the platform or any systems or networks connected to it</li>
+                            <li>Use automated systems (bots, scrapers) to extract data without explicit permission</li>
+                            <li>Upload or transmit any malicious code, viruses, or harmful components</li>
+                            <li>Misrepresent your identity or affiliation with any person or organization</li>
+                            <li>Use the platform to conduct commercial activities without proper authorization</li>
+                            <li>Interfere with or disrupt the integrity or performance of the platform</li>
+                        </ul>
+                    </section>
+
+                    <!-- Intellectual Property -->
+                    <section class="mb-5">
+                        <h3 class="fw-bold mb-3" style="color: #2c3e50;">3. Intellectual Property Rights</h3>
+                        <p class="text-muted" style="line-height: 1.8;">
+                            All content, features, and functionality of this platform, including but not limited to text, graphics, logos, icons, images, 
+                            molecular structures, chemical data, and software, are the exclusive property of the platform or its licensors and are protected 
+                            by international copyright, trademark, and other intellectual property laws.
+                        </p>
+                        <p class="text-muted" style="line-height: 1.8;">
+                            Molecular data sourced from public databases (PubChem, PDB, ClinicalTrials.gov) remains subject to the respective terms 
+                            of those databases. Users must comply with the original data source licenses when using or redistributing such data.
+                        </p>
+                    </section>
+
+                    <!-- Data and Privacy -->
+                    <section class="mb-5">
+                        <h3 class="fw-bold mb-3" style="color: #2c3e50;">4. Data Collection and Privacy</h3>
+                        <p class="text-muted" style="line-height: 1.8;">
+                            We collect and process user data in accordance with our Privacy Policy. By using this platform, you consent to the collection 
+                            and use of your information as outlined. This includes:
+                        </p>
+                        <ul class="text-muted" style="line-height: 1.8;">
+                            <li>Account information (username, email, authentication credentials)</li>
+                            <li>Usage data (molecule views, search queries, design history)</li>
+                            <li>Technical data (IP address, browser type, device information)</li>
+                            <li>AI interaction logs (queries submitted to AI models for analysis)</li>
+                        </ul>
+                        <p class="text-muted" style="line-height: 1.8;">
+                            Your research data and molecular designs remain confidential and will not be shared with third parties without your explicit consent.
+                        </p>
+                    </section>
+
+                    <!-- AI-Generated Content -->
+                    <section class="mb-5">
+                        <h3 class="fw-bold mb-3" style="color: #2c3e50;">5. AI-Generated Content and Analysis</h3>
+                        <p class="text-muted" style="line-height: 1.8;">
+                            This platform utilizes artificial intelligence models (including Ollama-based local models) to provide molecular analysis, 
+                            drug-likeness predictions, and literature summaries. Please note:
+                        </p>
+                        <ul class="text-muted" style="line-height: 1.8;">
+                            <li>AI-generated insights are provided for informational and research purposes only</li>
+                            <li>Results should be validated through independent scientific methods</li>
+                            <li>AI predictions do not constitute professional medical, pharmaceutical, or chemical advice</li>
+                            <li>The platform is not responsible for decisions made based solely on AI-generated content</li>
+                            <li>Accuracy of AI summaries depends on the quality and availability of source data</li>
+                        </ul>
+                    </section>
+
+                    <!-- Research Use -->
+                    <section class="mb-5">
+                        <h3 class="fw-bold mb-3" style="color: #2c3e50;">6. Research and Academic Use</h3>
+                        <p class="text-muted" style="line-height: 1.8;">
+                            This platform is intended primarily for educational and research purposes. If you use data or insights from this platform 
+                            in academic publications or research reports, we encourage you to:
+                        </p>
+                        <ul class="text-muted" style="line-height: 1.8;">
+                            <li>Cite the platform appropriately in your work</li>
+                            <li>Acknowledge the original data sources (PubChem, PDB, PubMed, etc.)</li>
+                            <li>Verify all molecular data and predictions independently before publication</li>
+                            <li>Comply with your institution's research ethics and data usage policies</li>
+                        </ul>
+                    </section>
+
+                    <!-- Disclaimer of Warranties -->
+                    <section class="mb-5">
+                        <h3 class="fw-bold mb-3" style="color: #2c3e50;">7. Disclaimer of Warranties</h3>
+                        <p class="text-muted" style="line-height: 1.8;">
+                            THE PLATFORM IS PROVIDED ON AN "AS IS" AND "AS AVAILABLE" BASIS WITHOUT WARRANTIES OF ANY KIND, EXPRESS OR IMPLIED. 
+                            WE DO NOT WARRANT THAT:
+                        </p>
+                        <ul class="text-muted" style="line-height: 1.8;">
+                            <li>The platform will be uninterrupted, secure, or error-free</li>
+                            <li>Molecular data or AI predictions will be accurate, complete, or reliable</li>
+                            <li>Any defects or errors will be corrected</li>
+                            <li>External data sources (PubMed, ClinicalTrials.gov) will remain continuously available</li>
+                        </ul>
+                        <p class="text-muted" style="line-height: 1.8;">
+                            Users assume full responsibility for validating all data and analysis results obtained through this platform.
+                        </p>
+                    </section>
+
+                    <!-- Limitation of Liability -->
+                    <section class="mb-5">
+                        <h3 class="fw-bold mb-3" style="color: #2c3e50;">8. Limitation of Liability</h3>
+                        <p class="text-muted" style="line-height: 1.8;">
+                            TO THE MAXIMUM EXTENT PERMITTED BY LAW, WE SHALL NOT BE LIABLE FOR ANY INDIRECT, INCIDENTAL, SPECIAL, CONSEQUENTIAL, 
+                            OR PUNITIVE DAMAGES, INCLUDING BUT NOT LIMITED TO:
+                        </p>
+                        <ul class="text-muted" style="line-height: 1.8;">
+                            <li>Loss of profits, data, or research outcomes</li>
+                            <li>Errors in molecular predictions or drug-likeness assessments</li>
+                            <li>Decisions made based on AI-generated insights</li>
+                            <li>Interruption of service or data loss</li>
+                            <li>Unauthorized access to your account or data</li>
+                        </ul>
+                    </section>
+
+                    <!-- Third-Party Services -->
+                    <section class="mb-5">
+                        <h3 class="fw-bold mb-3" style="color: #2c3e50;">9. Third-Party Services and Links</h3>
+                        <p class="text-muted" style="line-height: 1.8;">
+                            This platform integrates with and provides links to third-party services including:
+                        </p>
+                        <ul class="text-muted" style="line-height: 1.8;">
+                            <li>PubMed and NCBI databases</li>
+                            <li>ClinicalTrials.gov</li>
+                            <li>PubChem and Protein Data Bank (PDB)</li>
+                            <li>Semantic Scholar and Wikipedia</li>
+                            <li>Ollama AI models (locally hosted)</li>
+                        </ul>
+                        <p class="text-muted" style="line-height: 1.8;">
+                            We are not responsible for the content, privacy practices, or availability of these third-party services. 
+                            Your use of external services is governed by their respective terms and conditions.
+                        </p>
+                    </section>
+
+                    <!-- Modifications -->
+                    <section class="mb-5">
+                        <h3 class="fw-bold mb-3" style="color: #2c3e50;">10. Modifications to Terms</h3>
+                        <p class="text-muted" style="line-height: 1.8;">
+                            We reserve the right to modify these Terms and Conditions at any time. Changes will be effective immediately upon posting 
+                            to the platform. Your continued use of the platform after modifications constitutes acceptance of the updated terms. 
+                            We encourage you to review this page periodically for changes.
+                        </p>
+                    </section>
+
+                    <!-- Account Termination -->
+                    <section class="mb-5">
+                        <h3 class="fw-bold mb-3" style="color: #2c3e50;">11. Account Termination</h3>
+                        <p class="text-muted" style="line-height: 1.8;">
+                            We reserve the right to suspend or terminate your access to the platform at any time, without prior notice, 
+                            for conduct that we believe:
+                        </p>
+                        <ul class="text-muted" style="line-height: 1.8;">
+                            <li>Violates these Terms and Conditions</li>
+                            <li>Is harmful to other users or the platform</li>
+                            <li>Exposes us or other users to legal liability</li>
+                            <li>Involves automated data extraction or misuse of resources</li>
+                        </ul>
+                    </section>
+
+                    <!-- Governing Law -->
+                    <section class="mb-5">
+                        <h3 class="fw-bold mb-3" style="color: #2c3e50;">12. Governing Law and Jurisdiction</h3>
+                        <p class="text-muted" style="line-height: 1.8;">
+                            These Terms and Conditions shall be governed by and construed in accordance with the laws of the jurisdiction 
+                            in which the platform operates, without regard to its conflict of law provisions. Any disputes arising from 
+                            or relating to these terms shall be subject to the exclusive jurisdiction of the courts in that jurisdiction.
+                        </p>
+                    </section>
+
+                    <!-- Contact -->
+                    <section class="mb-4">
+                        <h3 class="fw-bold mb-3" style="color: #2c3e50;">13. Contact Information</h3>
+                        <p class="text-muted" style="line-height: 1.8;">
+                            If you have any questions about these Terms and Conditions, please contact us through the 
+                            <a href="{% url 'visualization:contact' %}" class="text-primary">Contact Page</a>.
+                        </p>
+                    </section>
+
+                    <!-- Acceptance -->
+                    <div class="alert alert-light border rounded-3 mt-5">
+                        <div class="d-flex align-items-start">
+                            <i class="fas fa-check-circle text-success me-3 mt-1" style="font-size: 1.2rem;"></i>
+                            <div>
+                                <strong class="text-dark">Acceptance of Terms</strong>
+                                <p class="mb-0 text-muted small mt-1">
+                                    By using this platform, you acknowledge that you have read, understood, and agree to be bound by these 
+                                    Terms and Conditions. If you do not agree to these terms, please discontinue use of the platform immediately.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+
+            <!-- Back to Home -->
+            <div class="text-center mt-4">
+                <a href="{% url 'visualization:home' %}" class="btn btn-outline-secondary rounded-pill px-4">
+                    <i class="fas fa-home me-2"></i> Back to Home
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    section h3 {
+        border-left: 4px solid #0d6efd;
+        padding-left: 15px;
+    }
+    
+    section ul {
+        padding-left: 2rem;
+    }
+    
+    section ul li {
+        margin-bottom: 0.5rem;
+    }
+</style>
+{% endblock %}

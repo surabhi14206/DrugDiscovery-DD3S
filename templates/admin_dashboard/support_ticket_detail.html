@@ -1,0 +1,265 @@
+{% extends 'base.html' %}
+
+{% block title %}Ticket #{{ ticket.id }} - Support Tickets{% endblock %}
+
+{% block extra_css %}
+<style>
+    .ticket-detail-card {
+        border-left: 4px solid;
+    }
+    .ticket-detail-card.pending {
+        border-left-color: #ffc107;
+    }
+    .ticket-detail-card.in_progress {
+        border-left-color: #0dcaf0;
+    }
+    .ticket-detail-card.resolved {
+        border-left-color: #198754;
+    }
+    .ticket-detail-card.closed {
+        border-left-color: #6c757d;
+    }
+    .response-box {
+        background-color: #f8f9fa;
+        border-left: 3px solid #0d6efd;
+        padding: 1rem;
+        border-radius: 0.5rem;
+    }
+    .theme-dark .response-box {
+        background-color: #1a1a1a;
+    }
+    .theme-dark .bg-light {
+        background-color: #2d2d2d !important;
+    }
+    .theme-dark .form-control,
+    .theme-dark .form-select {
+        background-color: #2d2d2d;
+        color: #e0e0e0;
+        border-color: #4d4d4d;
+    }
+    .theme-dark .form-control::placeholder {
+        color: #999;
+    }
+    .theme-dark .form-control:focus,
+    .theme-dark .form-select:focus {
+        background-color: #2d2d2d;
+        color: #e0e0e0;
+        border-color: #0d6efd;
+        box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <!-- Back Button -->
+    <div class="mb-3">
+        <a href="{% url 'admin_dashboard:support_tickets' %}" class="btn btn-outline-secondary">
+            <i class="fas fa-arrow-left me-2"></i> Back to Tickets
+        </a>
+    </div>
+
+    <div class="row">
+        <!-- Ticket Details -->
+        <div class="col-lg-8">
+            <div class="card ticket-detail-card {{ ticket.status }} border-0 shadow-sm mb-4">
+                <div class="card-header bg-transparent border-0 py-3">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div>
+                            <h4 class="mb-2">
+                                <i class="fas fa-ticket-alt text-primary me-2"></i>
+                                Ticket #{{ ticket.id }}
+                            </h4>
+                            <div class="d-flex gap-2 flex-wrap">
+                                {% if ticket.status == 'pending' %}
+                                    <span class="badge bg-warning">
+                                        <i class="fas fa-clock"></i> Pending
+                                    </span>
+                                {% elif ticket.status == 'in_progress' %}
+                                    <span class="badge bg-info">
+                                        <i class="fas fa-spinner"></i> In Progress
+                                    </span>
+                                {% elif ticket.status == 'resolved' %}
+                                    <span class="badge bg-success">
+                                        <i class="fas fa-check-circle"></i> Resolved
+                                    </span>
+                                {% else %}
+                                    <span class="badge bg-secondary">
+                                        <i class="fas fa-ban"></i> Closed
+                                    </span>
+                                {% endif %}
+                                
+                                {% if ticket.priority == 'urgent' %}
+                                    <span class="badge bg-danger">URGENT</span>
+                                {% elif ticket.priority == 'high' %}
+                                    <span class="badge bg-warning">HIGH</span>
+                                {% elif ticket.priority == 'medium' %}
+                                    <span class="badge bg-info">MEDIUM</span>
+                                {% else %}
+                                    <span class="badge bg-secondary">LOW</span>
+                                {% endif %}
+                                
+                                <span class="badge bg-secondary">{{ ticket.get_subject_display }}</span>
+                            </div>
+                        </div>
+                        <div class="text-end">
+                            <small class="text-muted d-block">
+                                <i class="fas fa-calendar-plus"></i> {{ ticket.created_at|date:"M d, Y" }}
+                            </small>
+                            <small class="text-muted d-block">
+                                <i class="fas fa-clock"></i> {{ ticket.created_at|time:"g:i A" }}
+                            </small>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <h5 class="mb-3">
+                        <i class="fas fa-user text-primary me-2"></i> Contact Information
+                    </h5>
+                    <div class="row mb-4">
+                        <div class="col-md-6">
+                            <p class="mb-2">
+                                <strong><i class="fas fa-user me-2"></i> Name:</strong><br>
+                                {{ ticket.name }}
+                            </p>
+                            <p class="mb-2">
+                                <strong><i class="fas fa-envelope me-2"></i> Email:</strong><br>
+                                <a href="mailto:{{ ticket.email }}">{{ ticket.email }}</a>
+                            </p>
+                        </div>
+                        <div class="col-md-6">
+                            {% if ticket.phone %}
+                            <p class="mb-2">
+                                <strong><i class="fas fa-phone me-2"></i> Phone:</strong><br>
+                                <a href="tel:{{ ticket.phone }}">{{ ticket.phone }}</a>
+                            </p>
+                            {% endif %}
+                            {% if ticket.user %}
+                            <p class="mb-2">
+                                <strong><i class="fas fa-user-circle me-2"></i> User Account:</strong><br>
+                                <a href="{% url 'admin_dashboard:user_detail' ticket.user.id %}">{{ ticket.user.username }}</a>
+                            </p>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <hr>
+
+                    <h5 class="mb-3">
+                        <i class="fas fa-comment-dots text-primary me-2"></i> Message
+                    </h5>
+                    <div class="bg-light p-3 rounded">
+                        <p class="mb-0" style="white-space: pre-wrap;">{{ ticket.message }}</p>
+                    </div>
+
+                    {% if ticket.admin_response %}
+                    <hr>
+                    <h5 class="mb-3">
+                        <i class="fas fa-reply text-success me-2"></i> Admin Response
+                    </h5>
+                    <div class="response-box">
+                        <p class="mb-2" style="white-space: pre-wrap;">{{ ticket.admin_response }}</p>
+                        <small class="text-muted">
+                            <i class="fas fa-user"></i> Responded by: 
+                            {% if ticket.admin_responder %}
+                                {{ ticket.admin_responder.username }}
+                            {% else %}
+                                Admin
+                            {% endif %}
+                            <i class="fas fa-clock ms-2"></i> {{ ticket.updated_at|date:"M d, Y g:i A" }}
+                        </small>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Response Form -->
+        <div class="col-lg-4">
+            <div class="card border-0 shadow-sm sticky-top" style="top: 20px;">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">
+                        <i class="fas fa-reply me-2"></i> Respond to Ticket
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <form method="post" action="{% url 'admin_dashboard:respond_ticket' ticket.id %}">
+                        {% csrf_token %}
+                        
+                        <div class="mb-3">
+                            <label for="response" class="form-label fw-bold">
+                                Response <span class="text-danger">*</span>
+                            </label>
+                            <textarea class="form-control" id="response" name="response" 
+                                      rows="8" required placeholder="Type your response here...">{{ ticket.admin_response }}</textarea>
+                            <small class="text-muted">This will be sent to the user via email.</small>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="status" class="form-label fw-bold">Status</label>
+                            <select class="form-select" id="status" name="status">
+                                <option value="pending" {% if ticket.status == 'pending' %}selected{% endif %}>Pending</option>
+                                <option value="in_progress" {% if ticket.status == 'in_progress' %}selected{% endif %}>In Progress</option>
+                                <option value="resolved" {% if ticket.status == 'resolved' %}selected{% endif %}>Resolved</option>
+                                <option value="closed" {% if ticket.status == 'closed' %}selected{% endif %}>Closed</option>
+                            </select>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="priority" class="form-label fw-bold">Priority</label>
+                            <select class="form-select" id="priority" name="priority">
+                                <option value="low" {% if ticket.priority == 'low' %}selected{% endif %}>Low</option>
+                                <option value="medium" {% if ticket.priority == 'medium' %}selected{% endif %}>Medium</option>
+                                <option value="high" {% if ticket.priority == 'high' %}selected{% endif %}>High</option>
+                                <option value="urgent" {% if ticket.priority == 'urgent' %}selected{% endif %}>Urgent</option>
+                            </select>
+                        </div>
+
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-paper-plane me-2"></i> Send Response
+                            </button>
+                            <a href="{% url 'admin_dashboard:support_tickets' %}" class="btn btn-outline-secondary">
+                                <i class="fas fa-times me-2"></i> Cancel
+                            </a>
+                        </div>
+                    </form>
+                </div>
+                
+                {% if ticket.resolved_at %}
+                <div class="card-footer bg-success text-white">
+                    <i class="fas fa-check-circle me-2"></i>
+                    <strong>Resolved:</strong> {{ ticket.resolved_at|date:"M d, Y g:i A" }}
+                </div>
+                {% endif %}
+            </div>
+
+            <!-- Quick Actions -->
+            <div class="card border-0 shadow-sm mt-3">
+                <div class="card-header bg-transparent">
+                    <h6 class="mb-0 fw-bold">
+                        <i class="fas fa-bolt me-2"></i> Quick Actions
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="d-grid gap-2">
+                        <a href="mailto:{{ ticket.email }}" class="btn btn-outline-primary btn-sm">
+                            <i class="fas fa-envelope me-2"></i> Email User
+                        </a>
+                        {% if ticket.phone %}
+                        <a href="tel:{{ ticket.phone }}" class="btn btn-outline-success btn-sm">
+                            <i class="fas fa-phone me-2"></i> Call User
+                        </a>
+                        {% endif %}
+                        {% if ticket.user %}
+                        <a href="{% url 'admin_dashboard:user_detail' ticket.user.id %}" class="btn btn-outline-info btn-sm">
+                            <i class="fas fa-user me-2"></i> View User Profile
+                        </a>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

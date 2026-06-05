@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ subject }}</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background: white;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .header {
+            padding: 30px;
+            text-align: center;
+        }
+        .header.info {
+            background: linear-gradient(135deg, #17a2b8 0%, #138496 100%);
+            color: white;
+        }
+        .header.success {
+            background: linear-gradient(135deg, #28a745 0%, #218838 100%);
+            color: white;
+        }
+        .header.warning {
+            background: linear-gradient(135deg, #ffc107 0%, #e0a800 100%);
+            color: #333;
+        }
+        .header.policy {
+            background: linear-gradient(135deg, #fd7e14 0%, #e8590c 100%);
+            color: white;
+        }
+        .header.feature {
+            background: linear-gradient(135deg, #6610f2 0%, #520dc2 100%);
+            color: white;
+        }
+        .header h1 {
+            margin: 0;
+            font-size: 24px;
+        }
+        .icon {
+            font-size: 50px;
+            margin-bottom: 15px;
+        }
+        .content {
+            padding: 30px;
+        }
+        .greeting {
+            font-size: 18px;
+            margin-bottom: 20px;
+            color: #2c3e50;
+        }
+        .message {
+            background: #f8f9fa;
+            border-left: 4px solid #0d6efd;
+            border-radius: 6px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+        .footer {
+            background: #f8f9fa;
+            padding: 20px 30px;
+            text-align: center;
+            border-top: 1px solid #e9ecef;
+        }
+        .footer p {
+            margin: 5px 0;
+            color: #6c757d;
+            font-size: 14px;
+        }
+        .footer a {
+            color: #0d6efd;
+            text-decoration: none;
+        }
+        .button {
+            display: inline-block;
+            background: #0d6efd;
+            color: white !important;
+            padding: 12px 30px;
+            border-radius: 6px;
+            text-decoration: none;
+            margin: 20px 0;
+            font-weight: 500;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header {{ notification_type }}">
+            <div class="icon">
+                <i class="fas fa-atom"></i>
+            </div>
+            <h1>DD3S - {{ subject }}</h1>
+        </div>
+        
+        <div class="content">
+            <div class="greeting">
+                Hello {{ user.username }}!
+            </div>
+            
+            <div class="message">
+                {{ message|linebreaks }}
+            </div>
+            
+            <p style="color: #6c757d; font-size: 14px; margin-top: 30px;">
+                This is an automated notification from your account. No sensitive information is included in this email.
+            </p>
+            
+            <div style="text-align: center;">
+                <a href="{{ request.scheme }}://{{ request.get_host }}" class="button">
+                    Visit Platform
+                </a>
+            </div>
+        </div>
+        
+        <div class="footer">
+            <p><strong>Questions or concerns?</strong></p>
+            <p>Contact us at <a href="mailto:{{ support_email }}">{{ support_email }}</a></p>
+            <p style="margin-top: 15px;">
+                <a href="{{ request.scheme }}://{{ request.get_host }}/admin-dashboard/settings/notifications/">
+                    Manage Email Preferences
+                </a>
+            </p>
+            <p style="margin-top: 15px; font-size: 12px;">
+                © {{ "now"|date:"Y" }} Molecular Database. All rights reserved.
+            </p>
+        </div>
+    </div>
+</body>
+</html>

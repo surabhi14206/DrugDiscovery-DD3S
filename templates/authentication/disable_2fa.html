@@ -1,0 +1,68 @@
+{% extends 'base.html' %}
+
+{% block title %}Manage Two-Factor Authentication{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card shadow">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="mb-0">
+                        <i class="fas fa-shield-alt"></i> Manage Two-Factor Authentication
+                    </h4>
+                </div>
+                <div class="card-body p-4">
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle"></i>
+                        <strong>Note:</strong> Disabling 2FA will reduce your account security.
+                    </div>
+
+                    <p class="mb-4">
+                        Are you sure you want to disable two-factor authentication? 
+                        This will remove the additional security layer from your login process.
+                    </p>
+
+                    <div class="bg-light p-3 rounded mb-4">
+                        <h6><i class="fas fa-list"></i> What happens when you disable 2FA:</h6>
+                        <ul class="mb-0">
+                            <li>You will only need your password to login</li>
+                            <li>Your account will be more vulnerable to unauthorized access</li>
+                            <li>All authenticator app configurations will be removed</li>
+                            <li>You can re-enable 2FA anytime from your profile</li>
+                        </ul>
+                    </div>
+
+                    <form method="post">
+                        {% csrf_token %}
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-warning btn-lg">
+                                <i class="fas fa-shield-alt"></i> Disable 2FA
+                            </button>
+                            <a href="{% url 'authentication:profile' %}" class="btn btn-outline-secondary">
+                                <i class="fas fa-arrow-left"></i> Cancel
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.card {
+    border: none;
+}
+
+/* Dark Theme */
+[data-theme="dark"] .bg-light {
+    background-color: #2d2d2d !important;
+}
+
+/* Recommended Theme */
+[data-theme="recomended"] .bg-light {
+    background-color: #3a3a3a !important;
+}
+</style>
+{% endblock %}

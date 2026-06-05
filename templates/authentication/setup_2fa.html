@@ -1,0 +1,238 @@
+{% extends 'base.html' %}
+
+{% block title %}Setup Two-Factor Authentication{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card shadow">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="mb-0 text-white">
+                        <i class="fas fa-shield-alt"></i> Setup Two-Factor Authentication
+                    </h4>
+                </div>
+                <div class="card-body p-4">
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle"></i>
+                        <strong>Enhanced Security:</strong> Two-factor authentication adds an extra layer of security to your account.
+                    </div>
+
+                    <!-- Step 1: Install Authenticator App -->
+                    <div class="mb-4">
+                        <h5 class="text-primary"><i class="fas fa-mobile-alt"></i> Step 1: Install Authenticator App</h5>
+                        <p class="text-muted">Install a 2FA authenticator app on your mobile device:</p>
+                        <div class="row g-3">
+                            <div class="col-md-4">
+                                <div class="card h-100 border-success">
+                                    <div class="card-body text-center">
+                                        <i class="fab fa-google fa-2x text-success mb-2"></i>
+                                        <h6>Google Authenticator</h6>
+                                        <small class="text-muted">Android / iOS</small>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="card h-100 border-primary">
+                                    <div class="card-body text-center">
+                                        <i class="fab fa-microsoft fa-2x text-primary mb-2"></i>
+                                        <h6>Microsoft Authenticator</h6>
+                                        <small class="text-muted">Android / iOS</small>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="card h-100 border-info">
+                                    <div class="card-body text-center">
+                                        <i class="fas fa-shield-alt fa-2x text-info mb-2"></i>
+                                        <h6>Authy</h6>
+                                        <small class="text-muted">Android / iOS</small>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <hr>
+
+                    <!-- Step 2: Scan QR Code -->
+                    <div class="mb-4">
+                        <h5 class="text-primary"><i class="fas fa-qrcode"></i> Step 2: Scan QR Code</h5>
+                        <p class="text-muted">Open your authenticator app and scan this QR code:</p>
+                        
+                        <div class="text-center mb-3 p-4 bg-light rounded position-relative">
+                            <a href="{% url 'authentication:setup_2fa' %}?regenerate=1" class="btn btn-sm btn-outline-secondary position-absolute" style="top: 10px; right: 10px;" title="Generate new QR code">
+                                <i class="fas fa-sync-alt"></i> Regenerate
+                            </a>
+                            <img src="data:image/png;base64,{{ qr_code }}" alt="QR Code" class="img-fluid" style="max-width: 250px;">
+                        </div>
+
+                        <div class="secret-key-info-box p-3 rounded border-primary" style="background-color: rgba(13, 110, 253, 0.05); border: 2px solid #0d6efd;">
+                            <strong><i class="fas fa-key"></i> Can't scan?</strong> 
+                            <p class="mb-0">Manually enter this secret key in your authenticator app:</p>
+                            <div class="mt-3 p-3 secret-key-box rounded border">
+                                <div class="d-flex align-items-center justify-content-between">
+                                    <div class="secret-key-display">
+                                        <code id="secretKeyDisplay" class="secret-key-text">{{ secret_key }}</code>
+                                    </div>
+                                    <button class="btn btn-primary" onclick="copySecretKey()" title="Copy to clipboard">
+                                        <i class="fas fa-copy"></i> Copy
+                                    </button>
+                                </div>
+                                <small class="text-muted d-block mt-2">
+                                    <i class="fas fa-info-circle"></i> Enter this exact key in your authenticator app if you can't scan the QR code
+                                </small>
+                            </div>
+                        </div>
+                    </div>
+
+                    <hr>
+
+                    <!-- Step 3: Verify -->
+                    <div class="mb-4">
+                        <h5 class="text-primary"><i class="fas fa-check-circle"></i> Step 3: Verify Setup</h5>
+                        <p class="text-muted">Enter the 6-digit code from your authenticator app to complete setup:</p>
+                        
+                        <form method="post" action="{% url 'authentication:verify_2fa_setup' %}">
+                            {% csrf_token %}
+                            <div class="mb-3">
+                                <label for="token" class="form-label">Verification Code</label>
+                                <input type="text" class="form-control form-control-lg text-center" 
+                                       id="token" name="token" 
+                                       placeholder="000000" 
+                                       maxlength="6" 
+                                       pattern="[0-9]{6}"
+                                       autocomplete="off"
+                                       required
+                                       style="letter-spacing: 10px; font-size: 2rem; font-family: monospace;">
+                                <div class="form-text">Enter the 6-digit code displayed in your authenticator app</div>
+                            </div>
+                            
+                            <!-- Security Tips -->
+                            <div class="mt-4 mb-4 text-dark">
+                                <h6><i class="fas fa-exclamation-triangle"></i> Important Security Tips:</h6>
+                                <ul class="mb-0">
+                                    <li>Keep your authenticator app secure and backed up</li>
+                                    <li>Don't share your secret key or QR code with anyone</li>
+                                    <li>Store backup codes in a safe place (if provided)</li>
+                                </ul>
+                            </div>
+                            
+                            <div class="d-grid gap-2">
+                                <button type="submit" class="btn btn-primary btn-lg">
+                                    Verify
+                                </button>
+                                <a href="{% url 'authentication:profile' %}" class="btn btn-outline-secondary">
+                                    Cancel
+                                </a>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function copySecretKey() {
+    // Get the secret key text and remove spaces for copying
+    const secretKeyElement = document.getElementById('secretKeyDisplay');
+    const secretKey = secretKeyElement.textContent.replace(/\s/g, '');
+    
+    navigator.clipboard.writeText(secretKey).then(() => {
+        const btn = event.target.closest('button');
+        const originalHTML = btn.innerHTML;
+        btn.innerHTML = '<i class="fas fa-check"></i> Copied!';
+        btn.classList.add('btn-success');
+        btn.classList.remove('btn-primary');
+        
+        setTimeout(() => {
+            btn.innerHTML = originalHTML;
+            btn.classList.remove('btn-success');
+            btn.classList.add('btn-primary');
+        }, 2000);
+    }).catch(err => {
+        console.error('Failed to copy:', err);
+        alert('Failed to copy. Please select and copy manually.');
+    });
+}
+
+// Auto-submit when 6 digits are entered
+document.getElementById('token').addEventListener('input', function(e) {
+    if (e.target.value.length === 6) {
+        e.target.form.submit();
+    }
+});
+</script>
+
+<style>
+.card {
+    border: none;
+}
+.card-header {
+    background: linear-gradient(135deg, #0d6efd 0%, #0a58ca 100%);
+}
+
+/* Secret Key Info Box */
+.secret-key-info-box {
+    background-color: rgba(13, 110, 253, 0.05);
+    border: 2px solid #0d6efd;
+}
+
+/* Secret Key Display Styling */
+.secret-key-box {
+    background-color: #f8f9fa;
+    border: 2px solid #0d6efd !important;
+}
+
+.secret-key-text {
+    font-size: 1.3rem;
+    font-weight: 600;
+    letter-spacing: 3px;
+    font-family: 'Courier New', monospace;
+    color: #0d6efd;
+    display: block;
+    word-break: break-all;
+    user-select: all;
+}
+
+/* Dark Theme */
+[data-theme="dark"] .bg-light {
+    background-color: #2d2d2d !important;
+}
+[data-theme="dark"] .secret-key-info-box {
+    background-color: rgba(77, 171, 247, 0.1) !important;
+    border-color: #4dabf7 !important;
+}
+[data-theme="dark"] .secret-key-box {
+    background-color: #1a1a1a !important;
+    border-color: #4dabf7 !important;
+}
+[data-theme="dark"] .secret-key-text {
+    color: #4dabf7 !important;
+}
+[data-theme="dark"] code {
+    color: #f8f9fa !important;
+}
+
+/* Recommended Theme */
+[data-theme="recomended"] .bg-light {
+    background-color: #3a3a3a !important;
+}
+[data-theme="recomended"] .secret-key-info-box {
+    background-color: rgba(90, 122, 150, 0.1) !important;
+    border-color: #5a7a96 !important;
+}
+[data-theme="recomended"] .secret-key-box {
+    background-color: #2d2d2d !important;
+    border-color: #5a7a96 !important;
+}
+[data-theme="recomended"] .secret-key-text {
+    color: #7aa2c4 !important;
+}
+[data-theme="recomended"] code {
+    color: #f8f9fa !important;
+}
+</style>
+{% endblock %}

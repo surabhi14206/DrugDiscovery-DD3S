@@ -1,0 +1,296 @@
+{% extends 'base.html' %}
+
+{% block title %}Support Tickets - Admin Dashboard{% endblock %}
+
+{% block extra_css %}
+<style>
+    .stats-card {
+        transition: transform 0.2s, box-shadow 0.2s;
+    }
+    .stats-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 8px 16px rgba(0,0,0,0.1);
+    }
+    .stats-icon {
+        font-size: 2.5rem;
+        opacity: 0.2;
+        position: absolute;
+        right: 1rem;
+        top: 50%;
+        transform: translateY(-50%);
+    }
+    .priority-badge {
+        font-size: 0.75rem;
+        padding: 0.25rem 0.5rem;
+    }
+    .ticket-row {
+        cursor: pointer;
+        transition: background-color 0.2s;
+    }
+    .ticket-row:hover {
+        background-color: rgba(0, 0, 0, 0.02);
+    }
+    .theme-dark .ticket-row:hover {
+        background-color: rgba(255, 255, 255, 0.02);
+    }
+    .filter-section {
+        background: linear-gradient(135deg, #0d6efd 0%, #0a58ca 100%);
+        border-radius: 10px;
+        padding: 1.5rem;
+        margin-bottom: 2rem;
+        color: white;
+    }
+    .theme-recomended .filter-section,
+    [data-theme="recomended"] .filter-section {
+        background: linear-gradient(135deg, #5a7a96 0%, #4a6a86 100%);
+    }
+    .theme-dark .filter-section {
+        background: linear-gradient(135deg, #434343 0%, #000000 100%);
+    }
+    .search-box {
+        border-radius: 50px;
+        border: none;
+        padding: 0.75rem 1.5rem;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+    .theme-dark .search-box {
+        background-color: #2d2d2d;
+        color: #e0e0e0;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+    }
+    .theme-dark .search-box::placeholder {
+        color: #999;
+    }
+    .theme-dark .input-group-text {
+        background-color: #2d2d2d;
+        color: #e0e0e0;
+        border-color: #2d2d2d;
+    }
+    .theme-dark .form-select {
+        background-color: #2d2d2d;
+        color: #e0e0e0;
+        border-color: #2d2d2d;
+    }
+    .theme-dark .form-select option {
+        background-color: #2d2d2d;
+        color: #e0e0e0;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <!-- Back Button -->
+    <div class="mb-3">
+        <a href="{% url 'admin_dashboard:dashboard' %}" class="btn btn-outline-secondary">
+            <i class="fas fa-arrow-left me-2"></i> Back to Dashboard
+        </a>
+    </div>
+
+    <!-- Page Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1 class="mb-0 display-6 fw-bold">
+                <i class="fas fa-headset" style="color: var(--primary-color);"></i> Support Tickets
+            </h1>
+            <p class="text-muted mb-0">Manage user support requests and inquiries</p>
+        </div>
+    </div>
+
+    <!-- Statistics Cards -->
+    <div class="row g-4 mb-4">
+        <div class="col-xl-3 col-md-6">
+            <div class="card stats-card border-0 shadow-sm position-relative overflow-hidden">
+                <div class="card-body">
+                    <h6 class="text-muted text-uppercase fw-bold mb-2">Total Tickets</h6>
+                    <h2 class="mb-0 fw-bold">{{ total_tickets }}</h2>
+                    <i class="fas fa-ticket-alt stats-icon" style="color: var(--primary-color);"></i>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-3 col-md-6">
+            <div class="card stats-card border-0 shadow-sm position-relative overflow-hidden">
+                <div class="card-body">
+                    <h6 class="text-muted text-uppercase fw-bold mb-2">Pending</h6>
+                    <h2 class="mb-0 fw-bold text-warning">{{ pending_tickets }}</h2>
+                    <i class="fas fa-clock stats-icon text-warning"></i>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-3 col-md-6">
+            <div class="card stats-card border-0 shadow-sm position-relative overflow-hidden">
+                <div class="card-body">
+                    <h6 class="text-muted text-uppercase fw-bold mb-2">In Progress</h6>
+                    <h2 class="mb-0 fw-bold text-info">{{ in_progress_tickets }}</h2>
+                    <i class="fas fa-spinner stats-icon text-info"></i>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-3 col-md-6">
+            <div class="card stats-card border-0 shadow-sm position-relative overflow-hidden">
+                <div class="card-body">
+                    <h6 class="text-muted text-uppercase fw-bold mb-2">Resolved</h6>
+                    <h2 class="mb-0 fw-bold text-success">{{ resolved_tickets }}</h2>
+                    <i class="fas fa-check-circle stats-icon text-success"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Search and Filter Section -->
+    <div class="filter-section shadow">
+        <form method="get" class="row g-3 align-items-center">
+            <div class="col-md-5">
+                <div class="input-group">
+                    <span class="input-group-text bg-white border-0">
+                        <i class="fas fa-search"></i>
+                    </span>
+                    <input type="text" name="q" value="{{ search_query }}" 
+                           class="form-control search-box border-0" 
+                           placeholder="Search by name, email, or message...">
+                </div>
+            </div>
+            <div class="col-md-2">
+                <select name="status" class="form-select search-box border-0">
+                    <option value="">All Status</option>
+                    <option value="pending" {% if status_filter == 'pending' %}selected{% endif %}>Pending</option>
+                    <option value="in_progress" {% if status_filter == 'in_progress' %}selected{% endif %}>In Progress</option>
+                    <option value="resolved" {% if status_filter == 'resolved' %}selected{% endif %}>Resolved</option>
+                    <option value="closed" {% if status_filter == 'closed' %}selected{% endif %}>Closed</option>
+                </select>
+            </div>
+            <div class="col-md-2">
+                <select name="priority" class="form-select search-box border-0">
+                    <option value="">All Priority</option>
+                    <option value="low" {% if priority_filter == 'low' %}selected{% endif %}>Low</option>
+                    <option value="medium" {% if priority_filter == 'medium' %}selected{% endif %}>Medium</option>
+                    <option value="high" {% if priority_filter == 'high' %}selected{% endif %}>High</option>
+                    <option value="urgent" {% if priority_filter == 'urgent' %}selected{% endif %}>Urgent</option>
+                </select>
+            </div>
+            <div class="col-md-3">
+                <button type="submit" class="btn btn-light search-box w-50">
+                    <i class="fas fa-filter me-2"></i> Filter
+                </button>
+                <a href="{% url 'admin_dashboard:support_tickets' %}" class="btn btn-light search-box w-45 ms-2">
+                    <i class="fas fa-redo"></i>
+                </a>
+            </div>
+        </form>
+    </div>
+
+    <!-- Tickets Table -->
+    <div class="card border-0 shadow-sm">
+        <div class="card-header bg-transparent border-0 py-3">
+            <h5 class="mb-0 fw-bold">
+                <i class="fas fa-list me-2"></i> All Tickets 
+                <span class="badge bg-primary rounded-pill">{{ tickets.count }}</span>
+            </h5>
+        </div>
+        <div class="card-body p-0">
+            {% if tickets %}
+            <div class="table-responsive">
+                <table class="table table-hover table-striped mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th style="width: 60px;">ID</th>
+                            <th>Name & Email</th>
+                            <th>Subject</th>
+                            <th>Status</th>
+                            <th>Priority</th>
+                            <th>Created</th>
+                            <th style="width: 150px;" class="text-center">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for ticket in tickets %}
+                        <tr class="ticket-row" onclick="window.location.href='{% url 'admin_dashboard:support_ticket_detail' ticket.id %}'">
+                            <td class="fw-bold text-muted">#{{ ticket.id }}</td>
+                            <td>
+                                <div>
+                                    <strong class="d-block">{{ ticket.name }}</strong>
+                                    <small class="text-muted">
+                                        <i class="fas fa-envelope me-1"></i> {{ ticket.email }}
+                                    </small>
+                                    {% if ticket.phone %}
+                                    <br>
+                                    <small class="text-muted">
+                                        <i class="fas fa-phone me-1"></i> {{ ticket.phone }}
+                                    </small>
+                                    {% endif %}
+                                </div>
+                            </td>
+                            <td>
+                                <span class="badge bg-secondary">
+                                    {{ ticket.get_subject_display }}
+                                </span>
+                                <div class="small text-muted mt-1">
+                                    {{ ticket.message|truncatewords:10 }}
+                                </div>
+                            </td>
+                            <td>
+                                {% if ticket.status == 'pending' %}
+                                    <span class="badge bg-warning">
+                                        <i class="fas fa-clock"></i> Pending
+                                    </span>
+                                {% elif ticket.status == 'in_progress' %}
+                                    <span class="badge bg-info">
+                                        <i class="fas fa-spinner"></i> In Progress
+                                    </span>
+                                {% elif ticket.status == 'resolved' %}
+                                    <span class="badge bg-success">
+                                        <i class="fas fa-check-circle"></i> Resolved
+                                    </span>
+                                {% else %}
+                                    <span class="badge bg-secondary">
+                                        <i class="fas fa-ban"></i> Closed
+                                    </span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if ticket.priority == 'urgent' %}
+                                    <span class="badge bg-danger priority-badge">URGENT</span>
+                                {% elif ticket.priority == 'high' %}
+                                    <span class="badge bg-warning priority-badge">HIGH</span>
+                                {% elif ticket.priority == 'medium' %}
+                                    <span class="badge bg-info priority-badge">MEDIUM</span>
+                                {% else %}
+                                    <span class="badge bg-secondary priority-badge">LOW</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <small class="text-muted">
+                                    <i class="fas fa-calendar-plus me-1"></i> 
+                                    {{ ticket.created_at|date:"M d, Y" }}<br>
+                                    <i class="fas fa-clock me-1"></i> 
+                                    {{ ticket.created_at|time:"g:i A" }}
+                                </small>
+                            </td>
+                            <td class="text-center" onclick="event.stopPropagation();">
+                                <div class="btn-group btn-group-sm">
+                                    <a href="{% url 'admin_dashboard:support_ticket_detail' ticket.id %}" 
+                                       class="btn btn-outline-primary" title="View Details">
+                                        <i class="fas fa-eye"></i>
+                                    </a>
+                                    <a href="{% url 'admin_dashboard:support_ticket_detail' ticket.id %}" 
+                                       class="btn btn-outline-success" title="Respond">
+                                        <i class="fas fa-reply"></i>
+                                    </a>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="p-5 text-center">
+                <i class="fas fa-inbox fa-5x mb-4 text-muted opacity-25"></i>
+                <h4 class="text-muted">No support tickets found</h4>
+                <p class="text-muted">There are no support requests matching your criteria.</p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

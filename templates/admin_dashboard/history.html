@@ -1,0 +1,300 @@
+{% extends 'base.html' %}
+
+{% block title %}Activity History{% endblock %}
+
+{% block extra_css %}
+<style>
+    .history-card {
+        border: none;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        margin-bottom: 20px;
+    }
+    .history-item {
+        padding: 15px;
+        border-bottom: 1px solid #f0f0f0;
+        transition: background-color 0.2s;
+    }
+    .history-item:hover {
+        background-color: #f8f9fa;
+    }
+    .history-item:last-child {
+        border-bottom: none;
+    }
+    .history-icon {
+        width: 40px;
+        height: 40px;
+        border-radius: 8px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-right: 15px;
+    }
+    .history-icon.activity {
+        background-color: #e7f1ff;
+        color: #0d6efd;
+    }
+    .history-icon.search {
+        background-color: #d4edda;
+        color: #198754;
+    }
+    .history-icon.prediction {
+        background-color: #fff3cd;
+        color: #ffc107;
+    }
+    .history-icon.molecule {
+        background-color: #cff4fc;
+        color: #0dcaf0;
+    }
+    .search-box {
+        border-radius: 25px;
+        padding: 12px 20px;
+        border: 2px solid #e0e0e0;
+    }
+    .search-box:focus {
+        border-color: #667eea;
+        box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
+    }
+    .nav-tabs .nav-link {
+        border: none;
+        color: #6c757d;
+        font-weight: 500;
+    }
+    .nav-tabs .nav-link.active {
+        color: #667eea;
+        border-bottom: 3px solid #667eea;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h1 class="mb-1"><i class="fas fa-history text-primary"></i> Activity History</h1>
+                    <p class="text-muted">View and search through your complete activity history</p>
+                </div>
+                <a href="{% url 'admin_dashboard:settings' %}" class="btn btn-outline-secondary">
+                    <i class="fas fa-arrow-left"></i> Back to Settings
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Search Bar -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <form method="get" action="{% url 'admin_dashboard:history' %}">
+                <div class="input-group">
+                    <span class="input-group-text bg-white">
+                        <i class="fas fa-search text-muted"></i>
+                    </span>
+                    <input type="text" 
+                           name="q" 
+                           class="form-control search-box border-start-0" 
+                           placeholder="Search your history..."
+                           value="{{ query }}">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-search"></i> Search
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Tabs -->
+    <ul class="nav nav-tabs mb-4" role="tablist">
+        <li class="nav-item">
+            <a class="nav-link active" data-bs-toggle="tab" href="#activities">
+                <i class="fas fa-chart-line"></i> Activities ({{ activities.count }})
+            </a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link" data-bs-toggle="tab" href="#searches">
+                <i class="fas fa-search"></i> Searches ({{ searches.count }})
+            </a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link" data-bs-toggle="tab" href="#predictions">
+                <i class="fas fa-brain"></i> Predictions ({{ predictions.count }})
+            </a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link" data-bs-toggle="tab" href="#molecules">
+                <i class="fas fa-flask"></i> Molecules ({{ molecule_views.count }})
+            </a>
+        </li>
+    </ul>
+
+    <!-- Tab Content -->
+    <div class="tab-content">
+        <!-- Activities Tab -->
+        <div class="tab-pane fade show active" id="activities">
+            <div class="card history-card">
+                <div class="card-header bg-light">
+                    <h5 class="mb-0"><i class="fas fa-chart-line"></i> Your Activities</h5>
+                </div>
+                <div class="card-body p-0">
+                    {% if activities %}
+                        {% for activity in activities %}
+                        <div class="history-item">
+                            <div class="d-flex align-items-start">
+                                <div class="history-icon activity">
+                                    <i class="fas fa-bolt"></i>
+                                </div>
+                                <div class="flex-grow-1">
+                                    <div class="d-flex justify-content-between">
+                                        <div>
+                                            <strong>{{ activity.get_action_type_display }}</strong>
+                                            {% if activity.search_query %}
+                                                <span class="text-muted">- Query: "{{ activity.search_query|truncatewords:10 }}"</span>
+                                            {% endif %}
+                                        </div>
+                                        <small class="text-muted">{{ activity.timestamp|date:"M d, Y H:i" }}</small>
+                                    </div>
+                                    <div class="text-muted small mt-1">
+                                        <i class="fas fa-network-wired"></i> {{ activity.ip_address }}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    {% else %}
+                        <div class="p-4 text-center text-muted">
+                            <i class="fas fa-inbox fa-3x mb-3 opacity-50"></i>
+                            <p>No activities found</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Searches Tab -->
+        <div class="tab-pane fade" id="searches">
+            <div class="card history-card">
+                <div class="card-header bg-light">
+                    <h5 class="mb-0"><i class="fas fa-search"></i> Your Searches</h5>
+                </div>
+                <div class="card-body p-0">
+                    {% if searches %}
+                        {% for search in searches %}
+                        <div class="history-item">
+                            <div class="d-flex align-items-start">
+                                <div class="history-icon search">
+                                    <i class="fas fa-search"></i>
+                                </div>
+                                <div class="flex-grow-1">
+                                    <div class="d-flex justify-content-between">
+                                        <div>
+                                            <strong>"{{ search.query|truncatewords:15 }}"</strong>
+                                            <span class="badge bg-secondary ms-2">{{ search.get_search_type_display }}</span>
+                                        </div>
+                                        <small class="text-muted">{{ search.timestamp|date:"M d, Y H:i" }}</small>
+                                    </div>
+                                    <div class="text-muted small mt-1">
+                                        <i class="fas fa-list"></i> {{ search.results_count }} result{{ search.results_count|pluralize }}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    {% else %}
+                        <div class="p-4 text-center text-muted">
+                            <i class="fas fa-inbox fa-3x mb-3 opacity-50"></i>
+                            <p>No searches found</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Predictions Tab -->
+        <div class="tab-pane fade" id="predictions">
+            <div class="card history-card">
+                <div class="card-header bg-light">
+                    <h5 class="mb-0"><i class="fas fa-brain"></i> Your Predictions</h5>
+                </div>
+                <div class="card-body p-0">
+                    {% if predictions %}
+                        {% for prediction in predictions %}
+                        <div class="history-item">
+                            <div class="d-flex align-items-start">
+                                <div class="history-icon prediction">
+                                    <i class="fas fa-brain"></i>
+                                </div>
+                                <div class="flex-grow-1">
+                                    <div class="d-flex justify-content-between">
+                                        <div>
+                                            <strong>{{ prediction.molecule.name }}</strong>
+                                            <span class="badge bg-warning text-dark ms-2">{{ prediction.get_prediction_type_display }}</span>
+                                        </div>
+                                        <small class="text-muted">{{ prediction.timestamp|date:"M d, Y H:i" }}</small>
+                                    </div>
+                                    <div class="text-muted small mt-1">
+                                        {% if prediction.processing_time %}
+                                            <i class="fas fa-clock"></i> Processed in {{ prediction.processing_time|floatformat:2 }}s
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    {% else %}
+                        <div class="p-4 text-center text-muted">
+                            <i class="fas fa-inbox fa-3x mb-3 opacity-50"></i>
+                            <p>No predictions found</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Molecules Tab -->
+        <div class="tab-pane fade" id="molecules">
+            <div class="card history-card">
+                <div class="card-header bg-light">
+                    <h5 class="mb-0"><i class="fas fa-flask"></i> Viewed Molecules</h5>
+                </div>
+                <div class="card-body p-0">
+                    {% if molecule_views %}
+                        {% for view in molecule_views %}
+                        <div class="history-item">
+                            <div class="d-flex align-items-start">
+                                <div class="history-icon molecule">
+                                    <i class="fas fa-flask"></i>
+                                </div>
+                                <div class="flex-grow-1">
+                                    <div class="d-flex justify-content-between">
+                                        <div>
+                                            <strong>{{ view.molecule.name }}</strong>
+                                            <span class="badge bg-info text-white ms-2">
+                                                <i class="fas fa-eye"></i> {{ view.view_count }} view{{ view.view_count|pluralize }}
+                                            </span>
+                                        </div>
+                                        <small class="text-muted">{{ view.viewed_at|date:"M d, Y H:i" }}</small>
+                                    </div>
+                                    <div class="text-muted small mt-1">
+                                        <code>{{ view.molecule.smiles|truncatechars:50 }}</code>
+                                    </div>
+                                    <a href="{% url 'visualization:molecule_detail' view.molecule.id %}" 
+                                       class="btn btn-sm btn-outline-primary mt-2">
+                                        <i class="fas fa-eye"></i> View Molecule
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    {% else %}
+                        <div class="p-4 text-center text-muted">
+                            <i class="fas fa-inbox fa-3x mb-3 opacity-50"></i>
+                            <p>No molecule views found</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

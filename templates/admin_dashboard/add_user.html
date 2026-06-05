@@ -1,0 +1,184 @@
+{% extends 'base.html' %}
+
+{% block title %}Add New User{% endblock %}
+
+{% block extra_css %}
+<style>
+    .add-user-container {
+        max-width: 800px;
+        margin: 40px auto;
+    }
+    .add-user-card {
+        border: none;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        border-radius: 15px;
+    }
+    .add-user-header {
+        background: linear-gradient(135deg, #0d6efd 0%, #0a58ca 100%);
+        color: white;
+        padding: 30px;
+        border-radius: 15px 15px 0 0;
+        text-align: center;
+    }
+    
+    /* Recommended Theme */
+    [data-theme="recomended"] .add-user-header,
+    .theme-recomended .add-user-header {
+        background: linear-gradient(135deg, #5a7a96 0%, #4a6a86 100%);
+    }
+    
+    /* Dark Theme */
+    [data-theme="dark"] .add-user-header,
+    .theme-dark .add-user-header {
+        background: linear-gradient(135deg, #2d2d2d 0%, #1a1a1a 100%);
+    }
+    
+    .form-section {
+        padding: 30px;
+    }
+    .form-section-title {
+        font-size: 18px;
+        font-weight: 600;
+        margin-bottom: 20px;
+        color: #2c3e50;
+        padding-bottom: 10px;
+        border-bottom: 2px solid #e9ecef;
+    }
+    .required-field::after {
+        content: " *";
+        color: #dc3545;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="add-user-container">
+    <div class="card add-user-card">
+        <div class="add-user-header">
+            <h2 class="mb-0">Add New User</h2>
+            <p class="mb-0">Create a new user account</p>
+        </div>
+        
+        <div class="card-body p-0">
+            {% if messages %}
+                <div class="p-3">
+                    {% for message in messages %}
+                    <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                        {{ message }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
+                    {% endfor %}
+                </div>
+            {% endif %}
+            
+            <form method="post" id="addUserForm">
+                {% csrf_token %}
+                
+                <div class="form-section">
+                    <div class="form-section-title">Account Information</div>
+                    
+                    <div class="mb-3">
+                        <label for="{{ form.username.id_for_label }}" class="form-label required-field">
+                            Username
+                        </label>
+                        {{ form.username }}
+                        {% if form.username.help_text %}
+                            <div class="form-text">{{ form.username.help_text }}</div>
+                        {% endif %}
+                        {% if form.username.errors %}
+                            <div class="text-danger">{{ form.username.errors.0 }}</div>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="{{ form.email.id_for_label }}" class="form-label required-field">
+                            Email Address
+                        </label>
+                        {{ form.email }}
+                        {% if form.email.errors %}
+                            <div class="text-danger">{{ form.email.errors.0 }}</div>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="{{ form.first_name.id_for_label }}" class="form-label">
+                                First Name
+                            </label>
+                            {{ form.first_name }}
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="{{ form.last_name.id_for_label }}" class="form-label">
+                                Last Name
+                            </label>
+                            {{ form.last_name }}
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="form-section" style="background: #f8f9fa;">
+                    <div class="form-section-title">Security</div>
+                    
+                    <div class="mb-3">
+                        <label for="{{ form.password1.id_for_label }}" class="form-label required-field">
+                            Password
+                        </label>
+                        {{ form.password1 }}
+                        {% if form.password1.help_text %}
+                            <div class="form-text">{{ form.password1.help_text }}</div>
+                        {% endif %}
+                        {% if form.password1.errors %}
+                            <div class="text-danger">{{ form.password1.errors.0 }}</div>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="{{ form.password2.id_for_label }}" class="form-label required-field">
+                            Confirm Password
+                        </label>
+                        {{ form.password2 }}
+                        {% if form.password2.errors %}
+                            <div class="text-danger">{{ form.password2.errors.0 }}</div>
+                        {% endif %}
+                    </div>
+                </div>
+                
+                <div class="form-section">
+                    <div class="form-section-title">Permissions</div>
+                    
+                    <div class="form-check mb-3">
+                        {{ form.is_active }}
+                        <label class="form-check-label" for="{{ form.is_active.id_for_label }}">
+                            {{ form.is_active.label }}
+                        </label>
+                        {% if form.is_active.help_text %}
+                            <div class="form-text">{{ form.is_active.help_text }}</div>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="form-check mb-3">
+                        {{ form.is_staff }}
+                        <label class="form-check-label" for="{{ form.is_staff.id_for_label }}">
+                            {{ form.is_staff.label }}
+                        </label>
+                        {% if form.is_staff.help_text %}
+                            <div class="form-text">{{ form.is_staff.help_text }}</div>
+                        {% endif %}
+                    </div>
+                </div>
+                
+                <div class="p-4" style="background: #f8f9fa;">
+                    <div class="d-grid gap-2">
+                        <button type="submit" class="btn btn-primary btn-lg">
+                            Create User
+                        </button>
+                        <a href="{% url 'admin_dashboard:user_list' %}" class="btn btn-outline-secondary">
+                            Cancel
+                        </a>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

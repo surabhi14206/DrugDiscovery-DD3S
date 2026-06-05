@@ -1,0 +1,114 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container">
+    <!-- Hero Section -->
+    <div class="jumbotron bg-light p-5 rounded-3 mb-5">
+        <h1 class="display-4">Welcome to PDB Clone</h1>
+        <p class="lead">
+            Explore molecular structures, predict properties using AI/ML, and discover drug compounds.
+        </p>
+        <hr class="my-4">
+        <p>Search through thousands of compounds with their 3D structures, SMILES representations, and predicted properties.</p>
+        
+        <!-- Search Form -->
+        <form method="GET" action="{% url 'visualization:search' %}" class="mt-4">
+            <div class="row g-3">
+                <div class="col-md-8">
+                    <input type="text" class="form-control form-control-lg" name="q" 
+                           placeholder="Search by name, gene target, or SMILES..." 
+                           value="{{ request.GET.q }}">
+                </div>
+                <div class="col-md-2">
+                    <select name="is_active" class="form-select form-select-lg">
+                        <option value="">All Status</option>
+                        <option value="true" {% if request.GET.is_active == 'true' %}selected{% endif %}>Active</option>
+                        <option value="false" {% if request.GET.is_active == 'false' %}selected{% endif %}>Inactive</option>
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <button type="submit" class="btn btn-primary btn-lg w-100">
+                        <i class="fas fa-search"></i> Search
+                    </button>
+                </div>
+            </div>
+        </form>
+    </div>
+
+    <!-- Features -->
+    <div class="row mb-5">
+        <div class="col-md-4">
+            <div class="card h-100">
+                <div class="card-body text-center">
+                    <i class="fas fa-3x fa-cube text-primary mb-3"></i>
+                    <h5 class="card-title">3D Visualization</h5>
+                    <p class="card-text">Interactive 3D molecular structure viewer powered by 3Dmol.js</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card h-100">
+                <div class="card-body text-center">
+                    <i class="fas fa-3x fa-brain text-success mb-3"></i>
+                    <h5 class="card-title">AI Predictions</h5>
+                    <p class="card-text">Neural network-based toxicity, solubility, and activity predictions</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card h-100">
+                <div class="card-body text-center">
+                    <i class="fas fa-3x fa-database text-info mb-3"></i>
+                    <h5 class="card-title">PDB Integration</h5>
+                    <p class="card-text">Direct access to RCSB PDB database via API</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Recent Molecules -->
+    <h2 class="mb-4">Featured Molecules</h2>
+    <div class="row">
+        {% for molecule in molecules %}
+        <div class="col-md-3 mb-4">
+            <div class="card h-100">
+                <div class="card-img-top bg-light d-flex align-items-center justify-content-center" style="height: 150px;">
+                    {% if molecule.image_2d %}
+                        <img src="{{ molecule.image_2d.url }}" 
+                             alt="{{ molecule.name }}" 
+                             style="max-width: 100%; max-height: 150px; background: white; padding: 5px;">
+                    {% else %}
+                        <i class="fas fa-3x fa-atom text-muted"></i>
+                    {% endif %}
+                </div>
+                <div class="card-body">
+                    <h6 class="card-title">{{ molecule.name|truncatewords:5 }}</h6>
+                    <p class="card-text">
+                        <small>
+                            {% if molecule.gene_target %}
+                                <span class="badge bg-primary">{{ molecule.gene_target }}</span>
+                            {% endif %}
+                            {% if molecule.is_active %}
+                                <span class="badge bg-success">Active</span>
+                            {% else %}
+                                <span class="badge bg-secondary">Inactive</span>
+                            {% endif %}
+                        </small>
+                    </p>
+                    <a href="{% url 'visualization:molecule_detail' molecule.pk %}" class="btn btn-sm btn-outline-primary w-100 mt-2">
+                        <i class="fas fa-eye"></i> View Details
+                    </a>
+                </div>
+            </div>
+        </div>
+        {% empty %}
+        <div class="col-12">
+            <div class="alert alert-info">
+                <i class="fas fa-info-circle"></i> No molecules in database yet. 
+                <a href="/admin/">Add some through admin panel</a> or import from JSON data.
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}

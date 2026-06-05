@@ -1,0 +1,197 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ title|truncatechars:60 }} — Summary{% endblock %}
+
+{% block content %}
+<style>
+    #reloadSummaryBtn {
+        transition: all 0.3s ease;
+    }
+
+    #reloadSummaryBtn:hover:not(:disabled) {
+        transform: rotate(180deg);
+    }
+
+    #reloadSummaryBtn:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+    }
+</style>
+
+<div class="container mt-5 mb-5">
+
+    <!-- Breadcrumb + Source Link -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <nav aria-label="breadcrumb" class="mb-0">
+            <ol class="breadcrumb mb-0">
+                <li class="breadcrumb-item"><a href="{% url 'visualization:search' %}">Literature Search</a></li>
+                <li class="breadcrumb-item active" aria-current="page">Summary</li>
+            </ol>
+        </nav>
+        {% if url %}
+        <a href="{{ url }}" target="_blank" rel="noopener noreferrer" class="btn btn-sm btn-outline-primary">
+            <i class="fas fa-external-link-alt me-1"></i>View Original Source
+        </a>
+        {% endif %}
+    </div>
+
+    <div class="row justify-content-center">
+        <div class="col-lg-10 col-xl-8">
+
+            <!-- Paper Title -->
+            <h2 class="fw-bold mb-4" style="line-height: 1.4; color: var(--text-color, #2c3e50);">
+                {{ title }}
+            </h2>
+
+            <!-- AI Summary Card -->
+            <div class="card shadow-sm border-0 mb-4">
+                <div class="card-header py-3 d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">
+                        <i class="fas fa-robot me-2 text-primary"></i>AI Summary
+                    </h5>
+                    <button class="btn btn-sm btn-outline-primary" onclick="reloadAISummary()" title="Reload Summary"
+                        style="display:none;" id="reloadSummaryBtn">
+                        <i class="fas fa-sync-alt"></i>
+                    </button>
+                </div>
+                <div class="card-body p-4">
+                    <div id="ai-summary-result">
+                        <p class="text-muted mb-3">
+                            <i class="fas fa-info-circle me-1"></i>
+                            Get an AI-generated plain-language explanation of this research paper.
+                        </p>
+                        <button class="btn btn-primary w-100" id="aiSummaryBtn" onclick="loadAISummary()">
+                            <i class="fas fa-magic me-2"></i>Generate Summary
+                        </button>
+                    </div>
+                    <div id="ai-summary-text" class="mt-3" style="display:none;">
+                        <div id="ai-summary-content"
+                            style="font-size: 1.05rem; line-height: 1.8; color: var(--text-color, #2c3e50);"></div>
+                    </div>
+                    <div id="ai-summary-spinner" class="text-center py-4" style="display:none;">
+                        <div class="spinner-border text-primary" role="status">
+                            <span class="visually-hidden">Loading...</span>
+                        </div>
+                        <p class="text-muted mt-2 mb-0">Generating summary...</p>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+{{ title|json_script:"page-title" }}
+{{ snippet|json_script:"page-snippet" }}
+{{ url|json_script:"page-url" }}
+
+<script>
+    // Store data in JS variables safely
+    const pageTitle = JSON.parse(document.getElementById('page-title').textContent);
+    const pageSnippet = JSON.parse(document.getElementById('page-snippet').textContent);
+    const pageUrl = JSON.parse(document.getElementById('page-url').textContent);
+
+    function loadAISummary() {
+        const btn = document.getElementById('aiSummaryBtn');
+        const spinner = document.getElementById('ai-summary-spinner');
+        const resultDiv = document.getElementById('ai-summary-result');
+        const textDiv = document.getElementById('ai-summary-text');
+        const contentEl = document.getElementById('ai-summary-content');
+
+        btn.disabled = true;
+        spinner.style.display = 'block';
+        resultDiv.style.display = 'none';
+
+        // Call the new endpoint that fetches and reads the full paper
+        fetch('/api/summarize-paper/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': getCookie('csrftoken')
+            },
+            body: JSON.stringify({
+                url: pageUrl,
+                title: pageTitle
+            })
+        })
+            .then(r => r.json())
+            .then(data => {
+                spinner.style.display = 'none';
+                if (data.success) {
+                    textDiv.style.display = 'block';
+                    contentEl.innerHTML = data.summary;
+                    // Show reload button after successful load
+                    document.getElementById('reloadSummaryBtn').style.display = 'block';
+                } else {
+                    textDiv.style.display = 'block';
+                    contentEl.innerHTML = `<p class="text-danger"><i class="fas fa-exclamation-triangle me-2"></i>${data.error || 'Failed to generate summary'}</p>`;
+                }
+            })
+            .catch(err => {
+                spinner.style.display = 'none';
+                resultDiv.style.display = 'block';
+                btn.disabled = false;
+                alert('Failed to generate summary. Please check your connection and ensure Ollama is running.');
+            });
+    }
+
+    function reloadAISummary() {
+        const reloadBtn = document.getElementById('reloadSummaryBtn');
+        const spinner = document.getElementById('ai-summary-spinner');
+        const textDiv = document.getElementById('ai-summary-text');
+        const contentEl = document.getElementById('ai-summary-content');
+
+        // Disable reload button and show spinner
+        reloadBtn.disabled = true;
+        const originalIcon = reloadBtn.innerHTML;
+        reloadBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+
+        spinner.style.display = 'block';
+        textDiv.style.display = 'none';
+
+        // Regenerate the summary
+        fetch('/api/summarize-paper/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': getCookie('csrftoken')
+            },
+            body: JSON.stringify({
+                url: pageUrl,
+                title: pageTitle
+            })
+        })
+            .then(r => r.json())
+            .then(data => {
+                spinner.style.display = 'none';
+                reloadBtn.disabled = false;
+                reloadBtn.innerHTML = originalIcon;
+
+                if (data.success) {
+                    textDiv.style.display = 'block';
+                    contentEl.innerHTML = data.summary;
+                } else {
+                    textDiv.style.display = 'block';
+                    contentEl.innerHTML = `<p class="text-danger"><i class="fas fa-exclamation-triangle me-2"></i>${data.error || 'Failed to generate summary'}</p>`;
+                }
+            })
+            .catch(err => {
+                spinner.style.display = 'none';
+                reloadBtn.disabled = false;
+                reloadBtn.innerHTML = originalIcon;
+                textDiv.style.display = 'block';
+                contentEl.innerHTML = `<p class="text-danger"><i class="fas fa-exclamation-triangle me-2"></i>Failed to reload summary. Please try again.</p>`;
+            });
+    }
+
+    function getCookie(name) {
+        let v = null;
+        document.cookie.split(';').forEach(c => {
+            const [k, val] = c.trim().split('=');
+            if (k === name) v = decodeURIComponent(val);
+        });
+        return v;
+    }
+</script>
+{% endblock %}

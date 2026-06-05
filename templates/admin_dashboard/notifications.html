@@ -1,0 +1,224 @@
+{% extends 'base.html' %}
+
+{% block title %}Notification Settings{% endblock %}
+
+{% block extra_css %}
+<style>
+    .notifications-container {
+        max-width: 700px;
+        margin: 40px auto;
+    }
+    .notifications-card {
+        border: none;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        border-radius: 15px;
+    }
+    .notifications-header {
+        background: linear-gradient(135deg, #0d6efd 0%, #0a58ca 100%);
+        color: white;
+        padding: 30px;
+        border-radius: 15px 15px 0 0;
+        text-align: center;
+    }
+    
+    /* Recommended Theme - Use navbar color */
+    [data-theme="recomended"] .notifications-header,
+    .theme-recomended .notifications-header {
+        background: linear-gradient(135deg, #5a7a96 0%, #4a6a86 100%);
+    }
+    
+    /* Dark Theme - Use navbar color */
+    [data-theme="dark"] .notifications-header,
+    .theme-dark .notifications-header {
+        background: linear-gradient(135deg, #2d2d2d 0%, #1a1a1a 100%);
+    }
+    
+    .notifications-header i {
+        font-size: 3rem;
+        margin-bottom: 15px;
+    }
+    .setting-item {
+        padding: 20px;
+        border-bottom: 1px solid #f0f0f0;
+    }
+    .setting-item:last-child {
+        border-bottom: none;
+    }
+    .switch {
+        position: relative;
+        display: inline-block;
+        width: 60px;
+        height: 30px;
+    }
+    .switch input {
+        opacity: 0;
+        width: 0;
+        height: 0;
+    }
+    .slider {
+        position: absolute;
+        cursor: pointer;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background-color: #ccc;
+        transition: .4s;
+        border-radius: 30px;
+    }
+    .slider:before {
+        position: absolute;
+        content: "";
+        height: 22px;
+        width: 22px;
+        left: 4px;
+        bottom: 4px;
+        background-color: white;
+        transition: .4s;
+        border-radius: 50%;
+    }
+    input:checked + .slider {
+        background-color: #667eea;
+    }
+    
+    /* Recommended Theme - Switch color */
+    [data-theme="recomended"] input:checked + .slider,
+    .theme-recomended input:checked + .slider {
+        background-color: #5a7a96;
+    }
+    
+    /* Dark Theme - Switch color */
+    [data-theme="dark"] input:checked + .slider,
+    .theme-dark input:checked + .slider {
+        background-color: #667eea;
+    }
+    
+    input:checked + .slider:before {
+        transform: translateX(30px);
+    }
+    .setting-item {
+        transition: background-color 0.2s;
+    }
+    .setting-item:hover {
+        background-color: #f8f9fa;
+    }
+    [data-theme="dark"] .setting-item:hover,
+    .theme-dark .setting-item:hover {
+        background-color: rgba(255,255,255,0.05);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="notifications-container">
+    <div class="card notifications-card">
+        <div class="notifications-header">
+            <h2 class="mb-0">Notification Settings</h2>
+            <p class="mb-0">Manage your notification preferences</p>
+        </div>
+        <div class="card-body p-0">
+            {% if messages %}
+                <div class="p-3">
+                    {% for message in messages %}
+                    <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                        {{ message }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
+                    {% endfor %}
+                </div>
+            {% endif %}
+
+            <form method="post" id="notificationForm">
+                {% csrf_token %}
+                
+                <div class="setting-item">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <div class="fw-bold mb-1">
+                                <i class="fas fa-envelope me-2"></i>Email Notifications
+                            </div>
+                            <div class="text-muted small">
+                                Receive email updates about your account activity
+                            </div>
+                        </div>
+                        <label class="switch">
+                            <input type="checkbox" name="email_notifications" 
+                                   {% if preferences.email_notifications %}checked{% endif %}>
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+                </div>
+
+                <div class="setting-item">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <div class="fw-bold mb-1">
+                                <i class="fas fa-bell me-2"></i>Activity Notifications
+                            </div>
+                            <div class="text-muted small">
+                                Get notified about important system activities
+                            </div>
+                        </div>
+                        <label class="switch">
+                            <input type="checkbox" name="activity_notifications" 
+                                   {% if preferences.activity_notifications %}checked{% endif %}>
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+                </div>
+
+                <div class="setting-item">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <div class="fw-bold mb-1">
+                                <i class="fas fa-calendar-week me-2"></i>Weekly Reports
+                            </div>
+                            <div class="text-muted small">
+                                Receive weekly summary reports via email
+                            </div>
+                        </div>
+                        <label class="switch">
+                            <input type="checkbox" name="weekly_reports" 
+                                   {% if preferences.weekly_reports %}checked{% endif %}>
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+                </div>
+
+                <div class="p-4">
+                    <div class="d-grid gap-2">
+                        <button type="submit" class="btn btn-primary btn-lg" id="saveBtn">
+                            Save
+                        </button>
+                        <a href="{% url 'authentication:profile' %}" class="btn btn-outline-secondary">
+                            Back
+                        </a>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Add visual feedback when toggles change
+    document.querySelectorAll('.switch input[type="checkbox"]').forEach(function(checkbox) {
+        checkbox.addEventListener('change', function() {
+            // Visual feedback that changes need to be saved
+            const saveBtn = document.getElementById('saveBtn');
+            if (saveBtn && !saveBtn.classList.contains('btn-primary')) {
+                saveBtn.classList.remove('btn-warning');
+                saveBtn.classList.add('btn-primary');
+                saveBtn.innerHTML = 'Save Changes';
+            }
+        });
+    });
+    
+    // Form submission handler
+    document.getElementById('notificationForm').addEventListener('submit', function(e) {
+        const saveBtn = document.getElementById('saveBtn');
+        saveBtn.disabled = true;
+        saveBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Saving...';
+    });
+</script>
+{% endblock %}

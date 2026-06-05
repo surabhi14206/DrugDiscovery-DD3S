@@ -1,0 +1,116 @@
+{% extends 'base.html' %}
+
+{% block title %}Search Results{% endblock %}
+
+{% block content %}
+<div class="container">
+    <h2 class="mb-4">Search Results</h2>
+    
+    <!-- Search Form -->
+    <div class="card mb-4">
+        <div class="card-body">
+            <form method="GET" action="{% url 'visualization:search' %}">
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <label class="form-label">General Search</label>
+                        <input type="text" class="form-control" name="q" 
+                               placeholder="Name, gene target, SMILES, or PDB code (e.g., 1A2B)..." 
+                               value="{{ request.GET.q }}">
+                        <small class="text-muted">💡 Searches local database first, then PDB if not found</small>
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label">Gene Target</label>
+                        <input type="text" class="form-control" name="gene_target" 
+                               placeholder="e.g., aldh1a1" 
+                               value="{{ request.GET.gene_target }}">
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label">Activity Status</label>
+                        <select name="is_active" class="form-select">
+                            <option value="">All</option>
+                            <option value="true" {% if request.GET.is_active == 'true' %}selected{% endif %}>Active</option>
+                            <option value="false" {% if request.GET.is_active == 'false' %}selected{% endif %}>Inactive</option>
+                        </select>
+                    </div>
+                    <div class="col-12">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-search"></i> Search
+                        </button>
+                        <a href="{% url 'visualization:search' %}" class="btn btn-secondary">
+                            <i class="fas fa-times"></i> Clear
+                        </a>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+    
+    <!-- Results -->
+    {% if pdb_fallback %}
+    <div class="alert alert-success">
+        <i class="fas fa-database"></i> 
+        Molecule fetched from <strong>PDB database</strong> and added to local database.
+    </div>
+    {% endif %}
+    
+    {% if molecules %}
+    {% if request.GET.q or request.GET.gene_target or request.GET.is_active %}
+    <div class="alert alert-info">
+        Found <strong>{{ molecules|length }}</strong> molecule(s)
+        {% if request.GET.q %}
+            matching "<strong>{{ request.GET.q }}</strong>"
+        {% endif %}
+        {% if request.GET.gene_target %}
+            with gene target "<strong>{{ request.GET.gene_target }}</strong>"
+        {% endif %}
+    </div>
+    {% endif %}
+    
+    <div class="row">
+        {% for molecule in molecules %}
+        <div class="col-md-3 mb-4">
+            <div class="card h-100">
+                <div class="card-img-top bg-light d-flex align-items-center justify-content-center" style="height: 150px;">
+                    {% if molecule.image_2d %}
+                        <img src="{{ molecule.image_2d.url }}" alt="{{ molecule.name }}" style="max-width: 100%; max-height: 150px;">
+                    {% else %}
+                        <img src="https://pubchem.ncbi.nlm.nih.gov/rest/pug/compound/smiles/{{ molecule.smiles|urlencode }}/PNG?image_size=250x250" 
+                             alt="{{ molecule.name }}" 
+                             style="max-width: 100%; max-height: 150px;"
+                             onerror="this.onerror=null; this.parentElement.innerHTML='<i class=\'fas fa-3x fa-atom text-muted\'></i>';">
+                    {% endif %}
+                </div>
+                <div class="card-body">
+                    <h6 class="card-title">{{ molecule.name|truncatewords:5 }}</h6>
+                    <p class="card-text">
+                        <small>
+                            {% if molecule.gene_target %}
+                                <span class="badge bg-primary">{{ molecule.gene_target }}</span>
+                            {% endif %}
+                            {% if molecule.is_active %}
+                                <span class="badge bg-success">Active</span>
+                            {% else %}
+                                <span class="badge bg-secondary">Inactive</span>
+                            {% endif %}
+                        </small>
+                    </p>
+                    <a href="{% url 'visualization:molecule_detail' molecule.pk %}" class="btn btn-sm btn-outline-primary w-100 mt-2">
+                        <i class="fas fa-eye"></i> View Details
+                    </a>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="alert alert-warning">
+        <i class="fas fa-info-circle"></i> 
+        {% if request.GET.q or request.GET.gene_target or request.GET.is_active %}
+            No molecules found matching your search criteria. Try different search terms.
+        {% else %}
+            Enter search criteria above to find molecules.
+        {% endif %}
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

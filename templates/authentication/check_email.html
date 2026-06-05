@@ -1,0 +1,30 @@
+{% extends 'base.html' %}
+
+{% block title %}Check Your Email - DD3S{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row justify-content-center mt-5">
+        <div class="col-md-6">
+            <div class="card shadow">
+                <div class="card-body text-center p-5">
+                    <i class="fas fa-envelope fa-5x text-primary mb-4"></i>
+                    <h2 class="mb-4">Check Your Email</h2>
+                    <p class="lead">We've sent a verification link to:</p>
+                    <p class="text-primary"><strong>{{ email }}</strong></p>
+                    <hr>
+                    <p>Please click the link in the email to verify your account and activate it.</p>
+                    <div class="alert alert-info mt-4">
+                        <i class="fas fa-info-circle"></i>
+                        <strong>Note:</strong> The verification link will expire in 24 hours.
+                    </div>
+                    <p class="text-muted mt-3">
+                        Didn't receive the email? Check your spam folder or
+                        <a href="#">request a new link</a>.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

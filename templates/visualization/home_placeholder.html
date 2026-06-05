@@ -1,0 +1,221 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Home - Drug Discovery Platform{% endblock %}
+
+{% block extra_css %}
+<style>
+    .hero-section {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 80px 0;
+        margin-bottom: 50px;
+    }
+    .feature-card {
+        transition: transform 0.3s, box-shadow 0.3s;
+        height: 100%;
+        border: none;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    }
+    .feature-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 5px 20px rgba(0,0,0,0.2);
+    }
+    .feature-icon {
+        font-size: 3rem;
+        margin-bottom: 1rem;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+    }
+    .stats-card {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 30px;
+        border-radius: 15px;
+        text-align: center;
+        margin-bottom: 20px;
+    }
+    .stats-number {
+        font-size: 2.5rem;
+        font-weight: 700;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Hero Section -->
+<section class="hero-section">
+    <div class="container text-center">
+        <h1 class="display-4 fw-bold mb-4">🧬 Drug Discovery Platform</h1>
+        <p class="lead mb-4">Advanced molecular analysis, toxicity prediction, and solubility assessment</p>
+        <div class="d-flex justify-content-center gap-3">
+            <a href="{% url 'visualization:search' %}" class="btn btn-light btn-lg">
+                <i class="fas fa-search"></i> Search Molecules
+            </a>
+            <a href="{% url 'molecules:compound_analyzer' %}" class="btn btn-outline-light btn-lg">
+                <i class="fas fa-flask"></i> Analyze Compound
+            </a>
+        </div>
+    </div>
+</section>
+
+<!-- Stats Section -->
+<div class="container mb-5">
+    <div class="row">
+        <div class="col-md-3">
+            <div class="stats-card">
+                <div class="stats-number">{{ total_molecules }}</div>
+                <div>Molecules</div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="stats-card">
+                <div class="stats-number">100%</div>
+                <div>RDKit Integrated</div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="stats-card">
+                <div class="stats-number">AI</div>
+                <div>Predictions</div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="stats-card">
+                <div class="stats-number">3D</div>
+                <div>Visualization</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Features Section -->
+<div class="container mb-5">
+    <h2 class="text-center mb-5">Core Features</h2>
+    <div class="row g-4">
+        <div class="col-md-4">
+            <div class="card feature-card">
+                <div class="card-body text-center p-4">
+                    <div class="feature-icon">
+                        <i class="fas fa-skull-crossbones"></i>
+                    </div>
+                    <h4>Toxicity Prediction</h4>
+                    <p class="text-muted">QSAR-based models for LD50, hERG, DILI, and mutagenicity assessment</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card feature-card">
+                <div class="card-body text-center p-4">
+                    <div class="feature-icon">
+                        <i class="fas fa-droplet"></i>
+                    </div>
+                    <h4>Solubility Analysis</h4>
+                    <p class="text-muted">ESOL, GSE, pH-dependent solubility and BCS classification</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card feature-card">
+                <div class="card-body text-center p-4">
+                    <div class="feature-icon">
+                        <i class="fas fa-cube"></i>
+                    </div>
+                    <h4>3D Visualization</h4>
+                    <p class="text-muted">Interactive 3D molecular structures with property analysis</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card feature-card">
+                <div class="card-body text-center p-4">
+                    <div class="feature-icon">
+                        <i class="fas fa-brain"></i>
+                    </div>
+                    <h4>Neural Networks</h4>
+                    <p class="text-muted">Deep learning models for activity and property prediction</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card feature-card">
+                <div class="card-body text-center p-4">
+                    <div class="feature-icon">
+                        <i class="fas fa-database"></i>
+                    </div>
+                    <h4>PDB Integration</h4>
+                    <p class="text-muted">Direct lookup and integration with Protein Data Bank</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card feature-card">
+                <div class="card-body text-center p-4">
+                    <div class="feature-icon">
+                        <i class="fas fa-flask"></i>
+                    </div>
+                    <h4>Compound Analyzer</h4>
+                    <p class="text-muted">Comprehensive analysis tool for any SMILES input</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Quick Actions -->
+<div class="container mb-5">
+    <div class="row">
+        <div class="col-md-6 mb-4">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title"><i class="fas fa-rocket"></i> Quick Actions</h5>
+                    <ul class="list-unstyled mt-3">
+                        <li class="mb-2">
+                            <a href="{% url 'visualization:search' %}" class="text-decoration-none">
+                                <i class="fas fa-search text-primary"></i> Search molecule database
+                            </a>
+                        </li>
+                        <li class="mb-2">
+                            <a href="{% url 'molecules:compound_analyzer' %}" class="text-decoration-none">
+                                <i class="fas fa-flask text-success"></i> Analyze new compound
+                            </a>
+                        </li>
+                        <li class="mb-2">
+                            <a href="/api/molecules/" class="text-decoration-none">
+                                <i class="fas fa-code text-warning"></i> Browse API
+                            </a>
+                        </li>
+                        <li class="mb-2">
+                            <a href="/admin/" class="text-decoration-none">
+                                <i class="fas fa-cog text-danger"></i> Admin panel
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6 mb-4">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title"><i class="fas fa-info-circle"></i> API Endpoints</h5>
+                    <ul class="list-unstyled mt-3">
+                        <li class="mb-2">
+                            <code class="text-muted">GET /api/molecules/</code> - All molecules
+                        </li>
+                        <li class="mb-2">
+                            <code class="text-muted">GET /api/search/?q=aspirin</code> - Search
+                        </li>
+                        <li class="mb-2">
+                            <code class="text-muted">GET /api/predict/toxicity/&lt;id&gt;/</code> - Toxicity
+                        </li>
+                        <li class="mb-2">
+                            <code class="text-muted">GET /api/predict/solubility/&lt;id&gt;/</code> - Solubility
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

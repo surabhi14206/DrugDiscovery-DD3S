@@ -1,0 +1,40 @@
+{% extends 'base.html' %}
+
+{% block title %}Theme Test{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="card">
+        <div class="card-header">
+            <h2>Theme Debug Information</h2>
+        </div>
+        <div class="card-body">
+            <h4>User Information:</h4>
+            <ul>
+                <li>Authenticated: {{ user.is_authenticated }}</li>
+                <li>Username: {{ user.username }}</li>
+                <li>Has Preferences: {% if user.preferences %}Yes{% else %}No{% endif %}</li>
+                {% if user.preferences %}
+                <li>Current Theme: {{ user.preferences.theme }}</li>
+                {% endif %}
+            </ul>
+
+            <h4>HTML/Body Attributes:</h4>
+            <p>Check the HTML element's data-theme attribute in browser DevTools</p>
+            
+            <h4>Test Elements:</h4>
+            <div class="alert alert-info">This is an alert with theme colors</div>
+            <button class="btn btn-primary">Primary Button</button>
+            <button class="btn btn-secondary">Secondary Button</button>
+            
+            <h4 class="mt-4">CSS Variables Test:</h4>
+            <div style="padding: 20px; background-color: var(--bg-color); color: var(--text-color); border: 1px solid var(--border-color);">
+                <p>Background Color: var(--bg-color)</p>
+                <p>Text Color: var(--text-color)</p>
+                <p>Border Color: var(--border-color)</p>
+                <p style="background-color: var(--card-bg); padding: 10px;">Card Background: var(--card-bg)</p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

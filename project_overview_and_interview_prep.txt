@@ -1,0 +1,102 @@
+DD3S Project Overview & Interview Preparation
+
+1. Code and Functions Overview & Locations
+--------------------------------------------------
+A. Home Page
+- Path/Location: `apps/visualization/views.py` -> `home(request)` function
+- Template Location: `templates/visualization/home.html`
+- What it does: Displays the landing page with real-time database statistics (total molecules, gene target distributions, active vs inactive counts).
+- Functions/Models Used: Queries the `Molecule` and `ImportStatistics` models using Django's ORM (e.g., `Molecule.objects.count()`, `.filter(is_active=True)`).
+
+B. Search Page
+- Path/Location: `apps/visualization/views.py` -> `search(request)` function
+- Template Location: `templates/visualization/search.html`
+- What it does: Allows users to search the database for molecules by name, SMILES, PDB ID, or gene target.
+- Functions/Models Used: Uses Django's `Q` objects to perform complex queries (e.g., `Q(name__icontains=query) | Q(smiles__icontains=query)`) on the `Molecule` model. It paginates/limits the results before sending them to the template.
+
+C. Design Page
+- Path/Location: `apps/visualization/views.py` -> `design(request)` function
+- Template Location: `templates/visualization/design.html`
+- What it does: Provides a tool for designing new molecules and viewing their drug-likeness metrics.
+- Functions/Models Used: This page heavily relies on frontend JavaScript to send requests to backend APIs like `calculate_properties()` and `get_drug_likeness_metrics()`. These backend functions use the `RDKit` library to compute molecular weights, Lipinski's Rule of 5 violations, solubility, and toxicity alerts.
+
+D. Analysis Page (Dashboard & AI Insights)
+- Path/Location: 
+  - User Dashboard: `apps/visualization/views.py` -> `user_dashboard(request)`
+  - AI Insights: `apps/visualization/views.py` -> `get_ai_insights(request)`
+  - Single Molecule Analysis: `apps/visualization/views.py` -> `molecule_detail(request, pk)`
+- Templates: `templates/authentication/dashboard.html` and `templates/visualization/molecule_detail.html`
+- What it does: Displays the user's molecule viewing history, overall database analysis, and 3D visualization of individual molecules along with an AI chat functionality.
+- Functions/Models Used: Interacts with a local AI model via Ollama (Gemma3:4b) by making POST requests to `http://localhost:11434/api/chat`. Uses `MoleculeViewHistory` model to track which molecules the user has viewed.
+
+
+2. Database Information
+--------------------------------------------------
+- Database Path: `c:\Users\yadav\OneDrive\Desktop\dd3s-project\DD\db.sqlite3`
+- Models Path (Core): `apps/molecules/models.py`
+  - `Molecule` Model: Stores the core data for each compound including `pdb_id`, `name`, `smiles`, `molecular_formula`, `is_active`, and `gene_target`. Contains a custom `save()` method to automatically calculate molecular weight and 2D images.
+  - `MoleculeProperty` Model: Stores additional generated properties for each molecule.
+  - `ImportStatistics` Model: Tracks records of bulk data imports.
+- Models Path (History): `apps/authentication/models.py`
+  - `MoleculeViewHistory` Model: Stores user interaction history for the dashboard.
+
+
+3. Interview Preparation: Properties in Python & JavaScript
+--------------------------------------------------
+
+### What is a "Property"?
+In programming, a "property" generally refers to an attribute of an object or class that holds data. Unlike regular variables, properties can sometimes have hidden logic (getter/setter methods) that runs automatically when you read or write to them.
+
+### Properties in Python
+In Python, properties are usually associated with Object-Oriented Programming (Classes).
+
+1. Basic Attributes (Instance Variables): Variables bound to an object.
+   ```python
+   class Molecule:
+       def __init__(self, name):
+           self.name = name # 'name' is a simple property/attribute
+   ```
+
+2. The `@property` Decorator: Used to define methods that behave like attributes. This is incredibly useful when you want to calculate a value on the fly rather than storing it in the database, or when you want to validate data before setting it.
+   ```python
+   class Molecule:
+       def __init__(self, smiles):
+           self.smiles = smiles
+           
+       @property
+       def is_valid(self):
+           # Calculate on the fly whenever mol.is_valid is accessed.
+           # Notice we don't call it like a function: mol.is_valid()
+           return len(self.smiles) > 0
+   ```
+   *How you used it in Django*: In your Django models, you access fields like properties (`molecule.name`, `molecule.smiles`). Behind the scenes, Django uses "descriptors" (the advanced mechanism behind properties) to map these object attributes to database columns.
+
+### Properties in JavaScript
+In JavaScript, almost everything is an object, and objects are essentially collections of properties (key-value pairs).
+
+1. Object Properties: You can access properties using dot notation or bracket notation.
+   ```javascript
+   const molecule = {
+       name: "Aspirin",
+       smiles: "CC(=O)OC1=CC=CC=C1C(=O)O"
+   };
+   
+   console.log(molecule.name); // Dot notation (most common)
+   console.log(molecule['smiles']); // Bracket notation (useful for dynamic keys)
+   ```
+
+2. Getters and Setters: Similar to Python's `@property`, JavaScript allows you to define `get` and `set` keywords within objects or classes to execute functions when a property is accessed.
+   ```javascript
+   const molecule = {
+       smiles_string: "C1=CC=CC=C1",
+       get isValid() {
+           return this.smiles_string.length > 0;
+       }
+   };
+   console.log(molecule.isValid); // Executes the getter function automatically
+   ```
+
+**Summary for the Interview**: 
+If you are asked to explain properties during your interview, keep these core differences in mind:
+- **Python**: Mention that they are class attributes and that the `@property` decorator is heavily used for "encapsulation" (allowing you to use getter/setter methods while keeping the clean syntax of `object.attribute` instead of `object.get_attribute()`).
+- **JavaScript**: Mention that JS objects are essentially dictionaries of properties, accessed via dot or bracket notation. Mention that modern JavaScript (ES6) also supports `get` and `set` keywords to create computed properties, just like Python.

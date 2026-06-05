@@ -1,0 +1,299 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}My Dashboard - DrugDiscovery{% endblock %}
+
+{% block extra_css %}
+<style>
+    .dashboard-header {
+        background: linear-gradient(135deg, #0d6efd 0%, #0a58ca 100%);
+        color: white;
+        padding: 2rem;
+        border-radius: 15px;
+        margin-bottom: 2rem;
+    }
+    
+    /* Recommended Theme - Use navbar color */
+    [data-theme="recomended"] .dashboard-header,
+    .theme-recomended .dashboard-header {
+        background: linear-gradient(135deg, #5a7a96 0%, #4a6a86 100%);
+    }
+    
+    /* Dark Theme - Use navbar color */
+    [data-theme="dark"] .dashboard-header,
+    .theme-dark .dashboard-header {
+        background: #2d2d2d;
+        border: 1px solid #404040;
+    }
+    
+    .stats-card {
+        background: white;
+        border-radius: 10px;
+        padding: 1.5rem;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        transition: transform 0.3s;
+        height: 100%;
+    }
+    
+    /* Dark Theme - Stats card */
+    [data-theme="dark"] .stats-card,
+    .theme-dark .stats-card {
+        background: #242424;
+        border: 1px solid #404040;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.3);
+    }
+    
+    .stats-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 5px 20px rgba(0,0,0,0.15);
+    }
+    
+    .stats-number {
+        font-size: 2.5rem;
+        font-weight: bold;
+        color: #667eea;
+    }
+    
+    /* Recommended Theme - Stats number color */
+    [data-theme="recomended"] .stats-number,
+    .theme-recomended .stats-number {
+        color: #5a7a96;
+    }
+    
+    .history-item {
+        background: white;
+        border-radius: 10px;
+        padding: 1rem;
+        margin-bottom: 1rem;
+        box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        transition: all 0.3s;
+        border-left: 4px solid #667eea;
+    }
+    
+    /* Dark Theme - History item */
+    [data-theme="dark"] .history-item,
+    .theme-dark .history-item {
+        background: #242424;
+        border: 1px solid #404040;
+        border-left: 4px solid #667eea;
+        box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+    }
+    
+    /* Recommended Theme - History item border */
+    [data-theme="recomended"] .history-item,
+    .theme-recomended .history-item {
+        border-left-color: #5a7a96;
+    }
+    
+    .history-item:hover {
+        box-shadow: 0 4px 15px rgba(0,0,0,0.15);
+        transform: translateX(5px);
+    }
+    
+    .molecule-name {
+        font-size: 1.2rem;
+        font-weight: 600;
+        color: #2d3748;
+        margin-bottom: 0.5rem;
+    }
+    
+    /* Dark Theme - Molecule name */
+    [data-theme="dark"] .molecule-name,
+    .theme-dark .molecule-name {
+        color: #e4e4e4;
+    }
+    
+    .chembl-id {
+        color: #667eea;
+        font-weight: 500;
+    }
+    
+    /* Recommended Theme - ChemBL ID color */
+    [data-theme="recomended"] .chembl-id,
+    .theme-recomended .chembl-id {
+        color: #5a7a96;
+    }
+    
+    .view-time {
+        color: #718096;
+        font-size: 0.9rem;
+    }
+    
+    .view-count-badge {
+        background: #667eea;
+        color: white;
+        padding: 0.25rem 0.75rem;
+        border-radius: 20px;
+        font-size: 0.85rem;
+    }
+    
+    /* Recommended Theme - Badge color */
+    [data-theme="recomended"] .view-count-badge,
+    .theme-recomended .view-count-badge {
+        background: #5a7a96;
+    }
+    
+    .section-title {
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: #2d3748;
+        margin-bottom: 1.5rem;
+        border-bottom: 3px solid #667eea;
+        padding-bottom: 0.5rem;
+    }
+    
+    /* Dark Theme - Section title */
+    [data-theme="dark"] .section-title,
+    .theme-dark .section-title {
+        color: #e4e4e4;
+    }
+    
+    /* Recommended Theme - Section title border */
+    [data-theme="recomended"] .section-title,
+    .theme-recomended .section-title {
+        border-bottom-color: #5a7a96;
+    }
+    
+    .empty-state {
+        text-align: center;
+        padding: 3rem;
+        color: #a0aec0;
+    }
+    
+    /* Dark Theme - Empty state */
+    [data-theme="dark"] .empty-state,
+    .theme-dark .empty-state {
+        color: #6c757d;
+    }
+    
+    .empty-state i {
+        font-size: 4rem;
+        margin-bottom: 1rem;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <!-- Dashboard Header -->
+    <div class="dashboard-header">
+        <h1><i class="fas fa-chart-line"></i> Welcome, {{ user.first_name|default:user.username }}!</h1>
+        <p class="mb-0">Track your molecule exploration journey</p>
+    </div>
+    
+    <!-- Statistics Cards -->
+    <div class="row mb-4">
+        <div class="col-md-4 mb-3">
+            <div class="stats-card text-center">
+                <i class="fas fa-eye fa-2x text-primary mb-3"></i>
+                <div class="stats-number">{{ total_views }}</div>
+                <div class="text-muted">Total Views</div>
+            </div>
+        </div>
+        <div class="col-md-4 mb-3">
+            <div class="stats-card text-center">
+                <i class="fas fa-flask fa-2x text-success mb-3"></i>
+                <div class="stats-number">{{ unique_molecules }}</div>
+                <div class="text-muted">Unique Molecules</div>
+            </div>
+        </div>
+        <div class="col-md-4 mb-3">
+            <div class="stats-card text-center">
+                <i class="fas fa-star fa-2x text-warning mb-3"></i>
+                <div class="stats-number">{{ most_viewed|length }}</div>
+                <div class="text-muted">Favorites</div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Most Viewed Molecules -->
+    {% if most_viewed %}
+    <div class="mb-5">
+        <h3 class="section-title"><i class="fas fa-fire"></i> Most Viewed Molecules</h3>
+        <div class="row">
+            {% for item in most_viewed %}
+            <div class="col-md-6 mb-3">
+                <div class="history-item">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div>
+                            <div class="molecule-name">{{ item.molecule__name|default:"Unknown Compound" }}</div>
+                            <div class="chembl-id mb-2">
+                                <i class="fas fa-tag"></i> {{ item.molecule__pdb_id|default:"N/A" }}
+                            </div>
+                            {% if item.molecule__smiles %}
+                            <div class="text-muted small">
+                                <i class="fas fa-code"></i> {{ item.molecule__smiles|truncatechars:50 }}
+                            </div>
+                            {% endif %}
+                        </div>
+                        <span class="view-count-badge">
+                            {{ item.total_views }} view{{ item.total_views|pluralize }}
+                        </span>
+                    </div>
+                    <div class="mt-2">
+                        <a href="{% url 'visualization:molecule_detail' item.molecule__id %}" 
+                           class="btn btn-sm btn-outline-primary">
+                            <i class="fas fa-eye"></i> View Details
+                        </a>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+    
+    <!-- Recent Viewing History -->
+    <div class="mb-5">
+        <h3 class="section-title"><i class="fas fa-history"></i> Recent Viewing History</h3>
+        
+        {% if view_history %}
+        <div class="row">
+            {% for history in view_history %}
+            <div class="col-12 mb-3">
+                <div class="history-item">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div class="flex-grow-1">
+                            <div class="molecule-name">
+                                {{ history.molecule.name|default:"Unknown Compound" }}
+                            </div>
+                            <div class="chembl-id mb-2">
+                                <i class="fas fa-tag"></i> {{ history.molecule.pdb_id|default:"N/A" }}
+                            </div>
+                            {% if history.molecule.smiles %}
+                            <div class="text-muted small mb-2">
+                                <i class="fas fa-code"></i> SMILES: {{ history.molecule.smiles|truncatechars:80 }}
+                            </div>
+                            {% endif %}
+                            <div class="view-time">
+                                <i class="far fa-clock"></i> 
+                                Viewed {{ history.viewed_at|timesince }} ago
+                                {% if history.view_count > 1 %}
+                                    <span class="ms-2 view-count-badge">{{ history.view_count }}x</span>
+                                {% endif %}
+                            </div>
+                        </div>
+                        <div>
+                            <a href="{% url 'visualization:molecule_detail' history.molecule.id %}" 
+                               class="btn btn-primary">
+                                <i class="fas fa-arrow-right"></i> View Again
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="empty-state">
+            <i class="fas fa-search"></i>
+            <h4>No viewing history yet</h4>
+            <p>Start exploring molecules to see your history here!</p>
+            <a href="{% url 'visualization:home' %}" class="btn btn-primary mt-3">
+                <i class="fas fa-flask"></i> Explore Molecules
+            </a>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

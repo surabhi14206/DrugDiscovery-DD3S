@@ -1,0 +1,78 @@
+# Python
+*.py[cod]
+*$py.class
+*.so
+.Python
+__pycache__/
+*.egg-info/
+dist/
+build/
+
+# Virtual Environment
+.venv/
+venv/
+ENV/
+env/
+
+# Django
+*.log
+db.sqlite3
+db.sqlite3-journal
+/media
+/staticfiles
+/static_root
+
+# Environment
+.env
+.env.local
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Celery
+celerybeat-schedule
+celerybeat.pid
+
+# Testing
+.coverage
+htmlcov/
+.pytest_cache/
+
+# ML Models
+*.h5
+*.pkl
+*.pth
+trained_models/
+
+# Large files
+*.pdb
+*.cif
+*.mmcif
+
+# Project specific temporary and error files
+check_err.txt
+error.txt
+pip_err.txt
+classes.txt
+contents.txt
+latex.txt
+ppt.txt
+data_cache/
+debug_design_rendered.html
+test_api.html
+
+# Exclude PDFs and PPTs as requested by user
+*.pdf
+*.ppt
+*.pptx
+.git_backup/
+ALL_7_Gene_SMILES_isActive.json
+

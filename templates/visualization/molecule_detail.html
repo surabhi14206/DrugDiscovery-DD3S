@@ -1,0 +1,1740 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ molecule.name|default:"Molecule Details" }} - Molecular Database{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* Utility class to ensure text is always visible */
+    .text-visible {
+        color: #212529 !important;
+    }
+
+    [data-theme="dark"] .text-visible,
+    .theme-dark .text-visible {
+        color: #ffffff !important;
+    }
+
+    .info-card {
+        border: 1px solid rgba(0, 0, 0, .125);
+        margin-bottom: 0;
+    }
+
+    .structure-viewer {
+        height: 366px;
+        border: 2px solid #e9ecef;
+        border-radius: 8px;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        position: relative;
+    }
+
+    #viewer3d {
+        width: 100%;
+        height: 100%;
+        position: absolute;
+        top: 0;
+        left: 0;
+    }
+
+    .chat-container {
+        height: 732px;
+        display: flex;
+        flex-direction: column;
+        border: 1px solid var(--border-color, #dee2e6);
+        border-radius: 8px;
+        overflow: hidden;
+        background-color: var(--card-bg, #ffffff);
+    }
+
+    .chat-messages {
+        flex: 1;
+        overflow-y: auto;
+        padding: 20px;
+        background-color: var(--bg-color, #f8f9fa);
+    }
+
+    .chat-message {
+        margin-bottom: 15px;
+        padding: 12px 16px;
+        border-radius: 8px;
+        max-width: 80%;
+    }
+
+    .chat-message.user {
+        background-color: var(--primary-color);
+        color: white;
+        margin-left: auto;
+        text-align: right;
+    }
+
+    .chat-message.ai {
+        background-color: var(--card-bg, white);
+        border: 1px solid var(--border-color, #dee2e6);
+        color: var(--text-color, #212529);
+    }
+
+    /* Markdown styling for AI chat messages */
+    .chat-message.ai p {
+        margin: 8px 0;
+    }
+
+    .chat-message.ai strong,
+    .chat-message.ai b {
+        color: var(--primary-color);
+        font-weight: 600;
+    }
+
+    .chat-message.ai ul,
+    .chat-message.ai ol {
+        margin: 10px 0;
+        padding-left: 25px;
+    }
+
+    .chat-message.ai li {
+        margin: 5px 0;
+    }
+
+    .chat-message.ai code {
+        background-color: #f8f9fa;
+        padding: 2px 6px;
+        border-radius: 4px;
+        font-family: 'Courier New', monospace;
+        font-size: 0.9em;
+    }
+
+    .chat-message.ai pre {
+        background-color: #f8f9fa;
+        padding: 12px;
+        border-radius: 6px;
+        overflow-x: auto;
+        margin: 10px 0;
+    }
+
+    .chat-message.ai pre code {
+        background-color: transparent;
+        padding: 0;
+    }
+
+    /* Drug-likeness cards backgrounds (light defaults) */
+    :root {
+        --metric-bg-solubility: linear-gradient(135deg, #E3F2FD 0%, #BBDEFB 100%);
+        --metric-bg-lipinski: linear-gradient(135deg, #B3E5FC 0%, #81D4FA 100%);
+        --metric-bg-veber: linear-gradient(135deg, #C5E1F5 0%, #90CAF9 100%);
+        --metric-bg-ghose: linear-gradient(135deg, #D1E7F5 0%, #A7D3F0 100%);
+        --metric-bg-toxicity: linear-gradient(135deg, #E0F2F7 0%, #B2EBF2 100%);
+    }
+
+    /* Dark mode: shift to neutral greys for cards */
+    [data-theme="dark"],
+    .theme-dark {
+        --metric-bg-solubility: linear-gradient(135deg, #3a3f4b 0%, #2c303a 100%);
+        --metric-bg-lipinski: linear-gradient(135deg, #3d414c 0%, #2e323c 100%);
+        --metric-bg-veber: linear-gradient(135deg, #3b404b 0%, #2d313b 100%);
+        --metric-bg-ghose: linear-gradient(135deg, #3c414d 0%, #2e323d 100%);
+        --metric-bg-toxicity: linear-gradient(135deg, #3a3f4a 0%, #2b2f38 100%);
+        --metric-badge-text: #e6ecf5;
+        --metric-badge-border: rgba(255, 255, 255, 0.25);
+        --metric-badge-bg: rgba(255, 255, 255, 0.08);
+    }
+
+    /* Light defaults for metric badges */
+    :root {
+        --metric-badge-text: #1976D2;
+        --metric-badge-border: #BBDEFB;
+        --metric-badge-bg: #ffffff;
+    }
+
+    .chat-message.ai blockquote {
+        border-left: 4px solid var(--primary-color);
+        padding-left: 15px;
+        margin: 10px 0;
+        color: #6c757d;
+    }
+
+    .chat-message.ai h1,
+    .chat-message.ai h2,
+    .chat-message.ai h3,
+    .chat-message.ai h4 {
+        color: var(--primary-color);
+        margin-top: 15px;
+        margin-bottom: 10px;
+    }
+
+    .chat-message.ai a {
+        color: var(--primary-color);
+        text-decoration: underline;
+    }
+
+    .chat-input-area {
+        padding: 15px;
+        background-color: var(--card-bg, white);
+        border-top: 1px solid var(--border-color, #dee2e6);
+    }
+
+    .property-badge {
+        padding: 8px 12px;
+        border-radius: 6px;
+        font-size: 0.9rem;
+        font-weight: 500;
+    }
+
+    .loading-spinner {
+        display: inline-block;
+        width: 20px;
+        height: 20px;
+        border: 3px solid #f3f3f3;
+        border-top: 3px solid var(--primary-color);
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin {
+        0% {
+            transform: rotate(0deg);
+        }
+
+        100% {
+            transform: rotate(360deg);
+        }
+    }
+
+    .pdb-fetch-btn {
+        margin-top: 10px;
+    }
+
+    #pdbResult {
+        margin-top: 10px;
+        padding: 10px;
+        border-radius: 6px;
+        background-color: #f8f9fa;
+        display: none;
+    }
+
+    .structure-2d-viewer {
+        height: 300px;
+        border: 2px solid #e9ecef;
+        border-radius: 8px;
+        background: white;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        position: relative;
+    }
+
+    #viewer2d {
+        width: 100%;
+        height: 100%;
+    }
+
+    /* Dark mode support for property cards */
+    [data-theme="dark"] .info-card,
+    .theme-dark .info-card {
+        border-color: var(--border-color, rgba(255, 255, 255, 0.125));
+        background-color: var(--card-bg, #1e1e1e);
+    }
+
+    /* Ensure text is visible in info-cards for both themes */
+    .info-card .card-body span,
+    .info-card .card-body small {
+        color: var(--text-color, #212529);
+    }
+
+    [data-theme="dark"] .info-card .card-body span,
+    [data-theme="dark"] .info-card .card-body small,
+    .theme-dark .info-card .card-body span,
+    .theme-dark .info-card .card-body small {
+        color: #e8edf5 !important;
+    }
+
+    /* Ensure card headers have proper background in dark mode */
+    [data-theme="dark"] .info-card .card-header,
+    .theme-dark .info-card .card-header {
+        background-color: #2b2d31 !important;
+        color: #e8edf5 !important;
+    }
+
+    /* Override bg-white on card headers in dark mode */
+    [data-theme="dark"] .info-card .card-header.bg-white,
+    .theme-dark .info-card .card-header.bg-white {
+        background-color: #2b2d31 !important;
+    }
+
+    /* Make SMILES text highly visible */
+    .info-card .font-monospace,
+    .info-card small.font-monospace {
+        color: #212529;
+        opacity: 1;
+    }
+
+    [data-theme="dark"] .info-card .font-monospace,
+    [data-theme="dark"] .info-card small.font-monospace,
+    .theme-dark .info-card .font-monospace,
+    .theme-dark .info-card small.font-monospace {
+        color: #ffffff !important;
+        opacity: 1 !important;
+    }
+
+    /* Dark mode for property result cards */
+    [data-theme="dark"] .card.border-0.shadow-sm,
+    .theme-dark .card.border-0.shadow-sm {
+        background: rgba(255, 255, 255, 0.05) !important;
+    }
+
+    [data-theme="dark"] .card.border-0.shadow-sm h6,
+    [data-theme="dark"] .card.border-0.shadow-sm p,
+    [data-theme="dark"] .card.border-0.shadow-sm span,
+    .theme-dark .card.border-0.shadow-sm h6,
+    .theme-dark .card.border-0.shadow-sm p,
+    .theme-dark .card.border-0.shadow-sm span {
+        color: #ffffff !important;
+    }
+
+    [data-theme="dark"] .card.border-0.shadow-sm .badge.bg-white,
+    .theme-dark .card.border-0.shadow-sm .badge.bg-white {
+        background-color: rgba(255, 255, 255, 0.1) !important;
+        border-color: rgba(255, 255, 255, 0.2) !important;
+    }
+
+    /* Fix icon buttons for dark mode */
+    [data-theme="dark"] .btn-outline-secondary,
+    [data-theme="dark"] .btn-outline-primary,
+    [data-theme="dark"] .btn-outline-success,
+    .theme-dark .btn-outline-secondary,
+    .theme-dark .btn-outline-primary,
+    .theme-dark .btn-outline-success {
+        color: #ffffff;
+        border-color: rgba(255, 255, 255, 0.3);
+    }
+
+    [data-theme="dark"] .btn-outline-secondary:hover,
+    [data-theme="dark"] .btn-outline-primary:hover,
+    [data-theme="dark"] .btn-outline-success:hover,
+    .theme-dark .btn-outline-secondary:hover,
+    .theme-dark .btn-outline-primary:hover,
+    .theme-dark .btn-outline-success:hover {
+        background-color: rgba(255, 255, 255, 0.1);
+        border-color: rgba(255, 255, 255, 0.5);
+    }
+
+    /* Fix dropdown chevron visibility in dark mode */
+    [data-theme="dark"] .form-select,
+    .theme-dark .form-select {
+        color: #e8edf5;
+        background-color: #1e1e1e;
+        border-color: rgba(255, 255, 255, 0.3);
+        background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='%23e8edf5' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='m2 5 6 6 6-6'/%3e%3c/svg%3e");
+    }
+
+    /* Fix property result alerts in dark mode */
+    [data-theme="dark"] .alert-info,
+    .theme-dark .alert-info,
+    [data-theme="dark"] .bg-light.border-info,
+    .theme-dark .bg-light.border-info {
+        background-color: rgba(13, 110, 253, 0.1) !important;
+        border-color: rgba(13, 110, 253, 0.3) !important;
+        color: #e8edf5 !important;
+    }
+
+    [data-theme="dark"] .alert-success,
+    .theme-dark .alert-success,
+    [data-theme="dark"] .bg-light.border-success,
+    .theme-dark .bg-light.border-success {
+        background-color: rgba(25, 135, 84, 0.1) !important;
+        border-color: rgba(25, 135, 84, 0.3) !important;
+        color: #e8edf5 !important;
+    }
+
+    [data-theme="dark"] .alert-warning,
+    .theme-dark .alert-warning,
+    [data-theme="dark"] .bg-light.border-warning,
+    .theme-dark .bg-light.border-warning {
+        background-color: rgba(255, 193, 7, 0.1) !important;
+        border-color: rgba(255, 193, 7, 0.3) !important;
+        color: #e8edf5 !important;
+    }
+
+    [data-theme="dark"] .text-muted,
+    .theme-dark .text-muted {
+        color: #a8b2c2 !important;
+    }
+
+    /* Dark mode dropdown menu */
+    [data-theme="dark"] .dropdown-menu,
+    .theme-dark .dropdown-menu {
+        background-color: #2b2d31 !important;
+        border: 1px solid rgba(255, 255, 255, 0.15) !important;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4) !important;
+    }
+
+    [data-theme="dark"] .dropdown-item,
+    .theme-dark .dropdown-item {
+        color: #e8edf5 !important;
+    }
+
+    [data-theme="dark"] .dropdown-item:hover,
+    [data-theme="dark"] .dropdown-item:focus,
+    .theme-dark .dropdown-item:hover,
+    .theme-dark .dropdown-item:focus {
+        background-color: rgba(255, 255, 255, 0.1) !important;
+        color: #ffffff !important;
+    }
+
+    [data-theme="dark"] .dropdown-divider,
+    .theme-dark .dropdown-divider {
+        border-color: rgba(255, 255, 255, 0.15) !important;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid mt-3 px-4">
+    <!-- Page Header -->
+    <div class="row mb-3">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-2">
+                <a href="{% url 'visualization:home' %}" class="btn btn-outline-primary">
+                    <i class="fas fa-arrow-left me-1"></i> Back to Home
+                </a>
+                <div class="btn-group dropup" role="group">
+                    <button type="button" class="btn btn-outline-success dropdown-toggle" data-bs-toggle="dropdown"
+                        aria-expanded="false">
+                        <i class="fas fa-download me-1"></i> Download
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-end">
+                        <li><a class="dropdown-item" href="#" onclick="printPage(); return false;"><i
+                                    class="fas fa-print me-2"></i> Print as PDF</a></li>
+                        <li><a class="dropdown-item" href="#" onclick="downloadAsHTML(); return false;"><i
+                                    class="fas fa-file-code me-2"></i> Download as HTML</a></li>
+                        <li><a class="dropdown-item" href="#" onclick="download2DStructure(); return false;"><i
+                                    class="fas fa-image me-2"></i> Download 2D Structure</a></li>
+                        <li>
+                            <hr class="dropdown-divider">
+                        </li>
+                        <li><a class="dropdown-item" href="#" onclick="exportToJSON(); return false;"><i
+                                    class="fas fa-file-export me-2"></i> Export Data (JSON)</a></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="d-flex justify-content-between align-items-center">
+                <h2 class="mb-0">
+                    <i class="fas fa-molecule text-primary me-2"></i>
+                    {{ molecule.name|default:"Unnamed Molecule" }}
+                </h2>
+                <div>
+                    {% if molecule.pdb_id %}
+                    <span class="badge bg-primary me-1">PDB: {{ molecule.pdb_id }}</span>
+                    {% endif %}
+                    {% if molecule.is_active %}
+                    <span class="badge bg-success me-1">Active</span>
+                    {% else %}
+                    <span class="badge bg-secondary me-1">Inactive</span>
+                    {% endif %}
+                    {% if molecule.gene_target %}
+                    <span class="badge bg-info">Target: {{ molecule.gene_target }}</span>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-3">
+        <!-- Left Column: Basic Info -->
+        <div class="col-lg-4">
+            <!-- Basic Information Card -->
+            <div class="card info-card">
+                <div class="card-header bg-white">
+                    <h5 class="mb-0"><i class="fas fa-info-circle text-primary me-2"></i> Basic Information</h5>
+                </div>
+                <div class="card-body p-3" style="height: 200px; overflow-y: auto;">
+                    <div class="mb-2">
+                        <label class="fw-bold text-muted small d-block">Formula</label>
+                        <span class="fs-6 text-visible">{{ molecule.molecular_formula|default:"N/A" }}</span>
+                    </div>
+
+                    <div class="mb-2">
+                        <label class="fw-bold text-muted small d-block">SMILES</label>
+                        <small class="font-monospace text-break text-visible" style="font-size: 0.75rem; line-height: 1.3;">{{ molecule.smiles|default:"N/A" }}</small>
+                    </div>
+
+                    {% if molecule.molecular_weight %}
+                    <div class="mb-2">
+                        <label class="fw-bold text-muted small d-block">Weight</label>
+                        <span class="text-visible">{{ molecule.molecular_weight|floatformat:2 }} g/mol</span>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Drug Discovery Properties -->
+            <div class="card info-card">
+                <div class="card-header d-flex justify-content-between align-items-center p-2"
+                    style="background-color: var(--card-bg, #ffffff);">
+                    <h6 class="mb-0" style="color: var(--text-color, #212529);"><i
+                            class="fas fa-flask text-success me-2"></i> Properties & Drug-Likeness</h6>
+                    <button id="calculatePropertiesBtn" class="btn btn-sm btn-success">
+                        <i class="fas fa-calculator"></i>
+                    </button>
+                </div>
+                <div class="card-body p-3" style="height: 532px; overflow-y: auto;">
+                    <div id="propertiesLoading" style="display: none;" class="text-center py-3">
+                        <span class="loading-spinner"></span>
+                        <p class="text-muted small mt-2">Calculating all properties...</p>
+                    </div>
+                    <div id="propertiesContent">
+                        <div class="text-center text-muted py-3">
+                            <i class="fas fa-info-circle fa-2x mb-2"></i>
+                            <p class="mb-0 small">Click to calculate chemical properties, Lipinski, Veber, Ghose
+                                filters, ESOL solubility & toxicity alerts</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Middle Column: Structure Viewers -->
+        <div class="col-lg-4">
+            <!-- 3D Structure -->
+            <div class="card info-card">
+                <div class="card-header d-flex justify-content-between align-items-center p-2"
+                    style="background-color: var(--card-bg, #ffffff);">
+                    <h6 class="mb-0" style="color: var(--text-color, #212529);"><i
+                            class="fas fa-cube text-info me-2"></i> 3D Structure</h6>
+                    <div class="d-flex gap-2">
+                        <select id="service3DSelector" class="form-select form-select-sm"
+                            style="width: auto; font-size: 0.8rem;" title="Select 3D generation service">
+                            <option value="cactus">NCI CACTUS</option>
+                            <option value="rdkit">RDKit</option>
+                            <option value="pubchem">PubChem</option>
+                        </select>
+
+                        <button onclick="resetView()" class="btn btn-sm btn-outline-secondary" title="Reset View">
+                            <i class="fas fa-undo"></i>
+                        </button>
+                        <button onclick="toggleSpin()" class="btn btn-sm btn-outline-danger" title="Toggle Spin">
+                            <i class="fas fa-sync-alt"></i>
+                        </button>
+                        <button onclick="init3DViewer()" class="btn btn-sm btn-success" title="Refresh 3D">
+                            <i class="fas fa-refresh"></i>
+                        </button>
+                    </div>
+                </div>
+                <div class="card-body p-2">
+                    <div class="structure-viewer" id="structureViewer">
+                        <div id="viewer3d"></div>
+                        <div id="loadingIndicator" class="text-center" style="position: absolute; z-index: 10;">
+                            <div class="spinner-border text-light" role="status">
+                                <span class="visually-hidden">Loading...</span>
+                            </div>
+                            <p class="text-white mt-2 small">Loading 3D...</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 2D Structure -->
+            <div class="card info-card">
+                <div class="card-header p-2" style="background-color: var(--card-bg, #ffffff);">
+                    <h6 class="mb-0" style="color: var(--text-color, #212529);"><i
+                            class="fas fa-project-diagram text-success me-2"></i> 2D Structure</h6>
+                </div>
+                <div class="card-body p-2">
+                    <div class="structure-2d-viewer" id="structure2dViewer">
+                        <canvas id="viewer2d"></canvas>
+                        <div id="loading2dIndicator" class="text-center" style="position: absolute; z-index: 10;">
+                            <div class="spinner-border text-primary" role="status">
+                                <span class="visually-hidden">Loading...</span>
+                            </div>
+                            <p class="text-muted mt-2 small">Loading 2D...</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Right Column: AI Chat Interface -->
+        <div class="col-lg-4">
+            <div class="card info-card">
+                <div class="card-header p-2" style="background-color: var(--card-bg, #ffffff);">
+                    <h6 class="mb-0" style="color: var(--text-color, #212529);">
+                        <i class="fas fa-robot text-primary me-2"></i>
+                        AI Assistant
+                    </h6>
+                    <small style="font-size: 0.7rem; color: var(--text-muted, #6c757d);">Drug Discovery &
+                        Cheminformatics</small>
+                </div>
+                <div class="chat-container">
+                    <div class="chat-messages" id="chatMessages">
+                        <div class="chat-message ai">
+                            <strong>AI:</strong> Ask me about chemical properties, toxicity, drug-likeness, and
+                            pharmaceutical concepts.
+                        </div>
+                    </div>
+                    <div class="chat-input-area">
+                        <div class="input-group">
+                            <input type="text" class="form-control" id="chatInput"
+                                placeholder="Ask about chemical properties, toxicity, solubility..."
+                                onkeypress="if(event.key === 'Enter') sendMessage()">
+                            <button class="btn btn-primary" onclick="sendMessage()">
+                                <i class="fas fa-paper-plane me-2"></i> Send
+                            </button>
+                        </div>
+                        <div id="chatError" class="alert alert-danger mt-2" style="display: none;"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Login Required Modal -->
+<div class="modal fade" id="loginModal" tabindex="-1" aria-labelledby="loginModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title" id="loginModalLabel">
+                    <i class="fas fa-lock me-2"></i>Login Required
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
+                    aria-label="Close"></button>
+            </div>
+            <div class="modal-body text-center py-4">
+                <i class="fas fa-user-lock fa-3x text-primary mb-3"></i>
+                <h5 class="mb-3">Premium Feature</h5>
+                <p class="text-muted">
+                    Please login to use this feature. This is a premium functionality available to registered users.
+                </p>
+            </div>
+            <div class="modal-footer justify-content-center">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                    <i class="fas fa-times me-2"></i>Cancel
+                </button>
+                <a href="{% url 'authentication:auth' %}" class="btn btn-primary">
+                    <i class="fas fa-sign-in-alt me-2"></i>Sign In / Sign Up
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 3Dmol.js Library -->
+<script src="https://3Dmol.csb.pitt.edu/build/3Dmol-min.js"></script>
+<!-- SmilesDrawer Library -->
+<script src="https://unpkg.com/smiles-drawer@2.0.1/dist/smiles-drawer.min.js"></script>
+
+<script>
+    // Molecule data for context
+    const moleculeData = {
+        name: "{{ molecule.name|escapejs }}",
+        smiles: "{{ molecule.smiles|escapejs }}",
+        molecular_formula: "{{ molecule.molecular_formula|escapejs }}",
+        molecular_weight: {% if molecule.molecular_weight %}{{ molecule.molecular_weight }}{% else %}null{% endif %},
+        toxicity_score: {% if molecule.toxicity_score %}{{ molecule.toxicity_score }}{% else %}null{% endif %},
+        solubility: {% if molecule.solubility %}{{ molecule.solubility }}{% else %}null{% endif %},
+        bioavailability: {% if molecule.bioavailability %}{{ molecule.bioavailability }}{% else %}null{% endif %}
+    };
+
+    // 3D Viewer variables
+    let viewer = null;
+    let isSpinning = false;
+    let currentBondColor = 'spectrum';
+
+    // Initialize 3D viewer with SMILES
+    async function init3DViewer() {
+        if (!moleculeData.smiles || moleculeData.smiles === '') {
+            document.getElementById('loadingIndicator').innerHTML = `
+            <div class="text-center text-white">
+                <i class="fas fa-exclamation-triangle fa-3x mb-3"></i>
+                <p>No SMILES data available for 3D visualization</p>
+            </div>
+        `;
+            return;
+        }
+
+        const loadingIndicator = document.getElementById('loadingIndicator');
+        const selectedService = document.getElementById('service3DSelector').value;
+
+        loadingIndicator.innerHTML = `
+        <div class="text-center text-white">
+            <div class="spinner-border mb-3" role="status"></div>
+            <p>Generating 3D structure...</p>
+            <small class="text-muted">Using ${selectedService.toUpperCase()}</small>
+        </div>
+    `;
+        loadingIndicator.style.display = 'block';
+
+        try {
+            const smilesEncoded = encodeURIComponent(moleculeData.smiles);
+            const startTime = Date.now();
+            let sdfData = null;
+
+            console.log(`[${new Date().toLocaleTimeString()}] Attempting 3D generation with ${selectedService}`);
+            console.log(`SMILES: ${moleculeData.smiles}`);
+
+            // Reset any previous viewer state before loading a new source
+            if (viewer) {
+                try {
+                    viewer.clear();
+                } catch (e) {
+                    console.warn('Failed to clear existing viewer:', e);
+                }
+                viewer = null;
+            }
+
+            if (selectedService === 'rdkit') {
+                // Use RDKit backend
+                const response = await fetch(`/api/generate-3d/?smiles=${smilesEncoded}`, {
+                    method: 'GET'
+                });
+
+                const elapsed = ((Date.now() - startTime) / 1000).toFixed(2);
+                console.log(`RDKit responded in ${elapsed}s with status ${response.status}`);
+
+                if (response.ok) {
+                    sdfData = await response.text();
+                } else {
+                    const errorText = await response.text();
+                    throw new Error(`RDKit backend error (${response.status}): ${errorText}`);
+                }
+
+            } else if (selectedService === 'pubchem') {
+                // Use PubChem API
+                const url = `https://pubchem.ncbi.nlm.nih.gov/rest/pug/compound/smiles/${smilesEncoded}/SDF`;
+
+                const controller = new AbortController();
+                const timeoutId = setTimeout(() => controller.abort(), 30000);
+
+                const response = await fetch(url, {
+                    signal: controller.signal,
+                    method: 'GET'
+                });
+                clearTimeout(timeoutId);
+
+                const elapsed = ((Date.now() - startTime) / 1000).toFixed(2);
+                console.log(`PubChem responded in ${elapsed}s with status ${response.status}`);
+
+                if (response.ok) {
+                    sdfData = await response.text();
+                } else {
+                    throw new Error(`PubChem API error (${response.status})`);
+                }
+
+            } else if (selectedService === 'cactus') {
+                // Use NCI CACTUS
+                const url = `https://cactus.nci.nih.gov/chemical/structure/${smilesEncoded}/file?format=sdf`;
+
+                const controller = new AbortController();
+                const timeoutId = setTimeout(() => controller.abort(), 30000);
+
+                const response = await fetch(url, {
+                    signal: controller.signal,
+                    method: 'GET'
+                });
+                clearTimeout(timeoutId);
+
+                const elapsed = ((Date.now() - startTime) / 1000).toFixed(2);
+                console.log(`NCI CACTUS responded in ${elapsed}s with status ${response.status}`);
+
+                if (response.ok) {
+                    sdfData = await response.text();
+                } else {
+                    throw new Error(`NCI CACTUS API error (${response.status})`);
+                }
+            }
+
+            // Validate SDF data
+            if (!sdfData || sdfData.length < 30) {
+                throw new Error('Empty or invalid response from service');
+            }
+
+            if (!sdfData.includes('V2000') && !sdfData.includes('V3000') && !sdfData.includes('M  END')) {
+                throw new Error('Invalid SDF format - missing structure data');
+            }
+
+            console.log(`✓ Successfully received SDF data (${sdfData.length} bytes)`);
+
+            // Initialize 3Dmol viewer
+            const element = document.getElementById('viewer3d');
+            const config = { backgroundColor: 'transparent' };
+            viewer = $3Dmol.createViewer(element, config);
+
+            // Add the molecule
+            viewer.addModel(sdfData, 'sdf');
+
+            // Set style - ball and stick representation
+            viewer.setStyle({}, {
+                stick: {
+                    radius: 0.15,
+                    color: currentBondColor
+                },
+                sphere: {
+                    scale: 0.3,
+                    colorscheme: 'Jmol'
+                }
+            });
+
+            // Add labels for heteroatoms
+            viewer.addPropertyLabels('elem', {
+                atom: function (atom) {
+                    return atom.elem !== 'C' && atom.elem !== 'H';
+                }
+            }, {
+                fontSize: 12,
+                fontColor: 'white',
+                backgroundOpacity: 0.7
+            });
+
+            // Center and zoom
+            viewer.zoomTo();
+            viewer.render();
+
+            // Hide loading indicator
+            document.getElementById('loadingIndicator').style.display = 'none';
+
+            const totalElapsed = ((Date.now() - startTime) / 1000).toFixed(2);
+            console.log(`✓ 3D structure loaded successfully in ${totalElapsed}s using ${selectedService}`);
+
+            // Optional: Start spinning
+            startSpin();
+
+        } catch (error) {
+            console.error('Error loading 3D structure:', error);
+
+            // Determine error type
+            let errorTitle = '3D Structure Generation Failed';
+            let errorMessage = 'Unable to generate 3D structure';
+            let errorDetail = error.message || 'Unknown error';
+            let suggestedService = '';
+
+            if (error.name === 'AbortError') {
+                errorMessage = 'Request timed out after 30 seconds';
+                errorDetail = 'The service took too long to respond. Try another service.';
+            } else if (error.message.includes('RDKit')) {
+                suggestedService = 'Try PubChem or NCI CACTUS';
+            } else if (error.message.includes('PubChem')) {
+                suggestedService = 'Try RDKit or NCI CACTUS';
+            } else if (error.message.includes('CACTUS')) {
+                suggestedService = 'Try RDKit or PubChem';
+            } else if (error.message.includes('Invalid SDF')) {
+                errorMessage = 'Invalid SMILES structure';
+                errorDetail = 'The SMILES string cannot be converted to a 3D structure.';
+            }
+
+            document.getElementById('loadingIndicator').innerHTML = `
+            <div class="text-center text-white p-4">
+                <i class="fas fa-exclamation-circle fa-3x mb-3 opacity-50"></i>
+                <h5>${errorTitle}</h5>
+                <p class="mb-2">${errorMessage}</p>
+                <div class="alert alert-dark mb-3" role="alert">
+                    <small><strong>Error:</strong> ${errorDetail}</small>
+                </div>
+                <div class="alert alert-dark text-start mb-3" role="alert">
+                    <small><strong>SMILES:</strong> <code class="text-light">${moleculeData.smiles}</code></small>
+                </div>
+                ${suggestedService ? `<p class="text-warning small mb-3"><i class="fas fa-lightbulb me-1"></i>${suggestedService}</p>` : ''}
+                <button class="btn btn-sm btn-outline-light" onclick="init3DViewer()">
+                    <i class="fas fa-redo me-1"></i> Retry
+                </button>
+            </div>
+        `;
+        }
+    }
+
+    // Reset view to default
+    function resetView() {
+        if (viewer) {
+            viewer.zoomTo();
+            viewer.render();
+        }
+    }
+
+    // Toggle spin animation
+    function toggleSpin() {
+        if (isSpinning) {
+            stopSpin();
+        } else {
+            startSpin();
+        }
+    }
+
+    function startSpin() {
+        if (viewer) {
+            viewer.spin(true);
+            isSpinning = true;
+        }
+    }
+
+    function stopSpin() {
+        if (viewer) {
+            viewer.spin(false);
+            isSpinning = false;
+        }
+    }
+
+    // Change bond color
+    function changeBondColor() {
+        const selector = document.getElementById('bondColorSelector');
+        const customColorPicker = document.getElementById('customBondColor');
+        const selectedColor = selector.value;
+
+        if (selectedColor === 'custom') {
+            customColorPicker.style.display = 'inline-block';
+            customColorPicker.click();
+        } else {
+            customColorPicker.style.display = 'none';
+            currentBondColor = selectedColor;
+            updateBondColor(selectedColor);
+        }
+    }
+
+    // Apply custom bond color from color picker
+    function applyCustomBondColor() {
+        const customColor = document.getElementById('customBondColor').value;
+        currentBondColor = customColor;
+        updateBondColor(customColor);
+    }
+
+    // Update bond color in the viewer
+    function updateBondColor(color) {
+        if (viewer) {
+            viewer.setStyle({}, {
+                stick: {
+                    radius: 0.15,
+                    color: color
+                },
+                sphere: {
+                    scale: 0.3,
+                    colorscheme: 'Jmol'
+                }
+            });
+            viewer.render();
+        }
+    }
+
+    // 2D Structure variables
+    let smilesDrawer = null;
+
+    // Initialize 2D viewer with SMILES
+    function init2DViewer() {
+        if (!moleculeData.smiles || moleculeData.smiles === '') {
+            document.getElementById('loading2dIndicator').innerHTML = `
+            <div class="text-center text-muted">
+                <i class="fas fa-exclamation-triangle fa-3x mb-3"></i>
+                <p>No SMILES data available for 2D visualization</p>
+            </div>
+        `;
+            return;
+        }
+
+        try {
+            // Initialize SmilesDrawer
+            let options = {
+                width: 500,
+                height: 300,
+                bondThickness: 2,
+                bondLength: 15,
+                shortBondLength: 0.85,
+                bondSpacing: 0.18 * 15,
+                atomVisualization: 'default',
+                isomeric: true,
+                debug: false,
+                terminalCarbons: false,
+                explicitHydrogens: false,
+                overlapSensitivity: 0.42,
+                overlapResolutionIterations: 1,
+                compactDrawing: true,
+                fontSizeLarge: 6,
+                fontSizeSmall: 3,
+                padding: 20.0,
+                themes: {
+                    dark: {
+                        C: '#fff',
+                        O: '#e74c3c',
+                        N: '#3498db',
+                        F: '#27ae60',
+                        CL: '#16a085',
+                        BR: '#d35400',
+                        I: '#8e44ad',
+                        P: '#f39c12',
+                        S: '#f1c40f',
+                        B: '#e67e22',
+                        SI: '#95a5a6',
+                        H: '#fff',
+                        BACKGROUND: '#141414'
+                    },
+                    light: {
+                        C: '#222',
+                        O: '#e74c3c',
+                        N: '#3498db',
+                        F: '#27ae60',
+                        CL: '#16a085',
+                        BR: '#d35400',
+                        I: '#8e44ad',
+                        P: '#f39c12',
+                        S: '#f1c40f',
+                        B: '#e67e22',
+                        SI: '#95a5a6',
+                        H: '#222',
+                        BACKGROUND: '#fff'
+                    }
+                }
+            };
+
+            smilesDrawer = new SmilesDrawer.Drawer(options);
+
+            // Parse and draw the SMILES
+            SmilesDrawer.parse(moleculeData.smiles, function (tree) {
+                smilesDrawer.draw(tree, 'viewer2d', 'light', false);
+
+                // Hide loading indicator
+                document.getElementById('loading2dIndicator').style.display = 'none';
+            }, function (err) {
+                console.error('Error parsing SMILES:', err);
+                document.getElementById('loading2dIndicator').innerHTML = `
+                <div class="text-center text-danger">
+                    <i class="fas fa-exclamation-circle fa-3x mb-3"></i>
+                    <p>Failed to parse SMILES</p>
+                    <small>${err}</small>
+                </div>
+            `;
+            });
+
+        } catch (error) {
+            console.error('Error loading 2D structure:', error);
+            document.getElementById('loading2dIndicator').innerHTML = `
+            <div class="text-center text-danger">
+                <i class="fas fa-exclamation-circle fa-3x mb-3"></i>
+                <p>Failed to load 2D structure</p>
+                <small>${error.message}</small>
+            </div>
+        `;
+        }
+    }
+
+    // Download 2D structure as PNG
+    function download2DStructure() {
+        const canvas = document.getElementById('viewer2d');
+        if (canvas) {
+            const link = document.createElement('a');
+            link.download = `${moleculeData.name || 'molecule'}_2D.png`;
+            link.href = canvas.toDataURL('image/png');
+            link.click();
+        }
+    }
+
+    // Print page as PDF
+    function printPage() {
+        window.print();
+    }
+
+    // Download page as HTML
+    async function downloadAsHTML() {
+        // Get the 2D structure image
+        const canvas = document.getElementById('viewer2d');
+        const structure2DImage = canvas ? canvas.toDataURL('image/png') : '';
+
+        // Get 3D structure image from 3Dmol viewer
+        let structure3DImage = '';
+        if (viewer) {
+            try {
+                const pngData = viewer.pngURI();
+                structure3DImage = pngData;
+            } catch (error) {
+                console.log('Could not capture 3D structure:', error);
+            }
+        }
+
+        // Get AI chat history
+        const chatMessagesDiv = document.getElementById('chatMessages');
+        let chatHistoryHTML = '';
+
+        if (chatMessagesDiv) {
+            const messages = chatMessagesDiv.querySelectorAll('.chat-message');
+            if (messages.length > 1) { // More than just the initial AI greeting
+                chatHistoryHTML = '<div class="section"><h2>💬 AI Assistant Chat History</h2>';
+                messages.forEach((msg, index) => {
+                    if (index === 0) return; // Skip initial greeting
+                    const isUser = msg.classList.contains('user');
+                    const content = msg.innerHTML.replace(/<strong>.*?<\/strong>/g, ''); // Remove "AI:" or "You:" labels
+                    chatHistoryHTML += `
+                    <div class="chat-entry ${isUser ? 'user-msg' : 'ai-msg'}">
+                        <div class="chat-header">${isUser ? '👤 You' : '🤖 AI Assistant'}</div>
+                        <div class="chat-content">${content}</div>
+                    </div>
+                `;
+                });
+                chatHistoryHTML += '</div>';
+            }
+        }
+
+        // Get properties content
+        const propertiesDiv = document.getElementById('propertiesContent');
+        let propertiesHTML = '';
+
+        if (propertiesDiv && propertiesDiv.innerHTML.trim() !== '' && !propertiesDiv.innerHTML.includes('Click to calculate')) {
+            propertiesHTML = propertiesDiv.innerHTML;
+        } else {
+            propertiesHTML = '<p style="color: #999;">Properties not calculated yet. Click "Calculate" button to generate properties before downloading.</p>';
+        }
+
+        const htmlContent = `
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>${moleculeData.name || 'Molecule'} - Molecular Database Report</title>
+    <style>
+        * { box-sizing: border-box; }
+        body { 
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+            padding: 40px; 
+            background: #f5f5f5;
+            color: #333;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 { 
+            color: #667eea; 
+            border-bottom: 3px solid #667eea;
+            padding-bottom: 15px;
+            margin-bottom: 30px;
+        }
+        h2 {
+            color: #444;
+            margin-top: 30px;
+            margin-bottom: 15px;
+            font-size: 1.5em;
+        }
+        .section { 
+            margin: 25px 0; 
+            padding: 20px; 
+            border: 1px solid #e0e0e0; 
+            border-radius: 8px;
+            background: #fafafa;
+        }
+        .info-row {
+            display: flex;
+            padding: 10px 0;
+            border-bottom: 1px solid #eee;
+        }
+        .info-row:last-child {
+            border-bottom: none;
+        }
+        .label { 
+            font-weight: 600; 
+            color: #555;
+            min-width: 180px;
+        }
+        .value { 
+            color: #333;
+            flex: 1;
+            word-break: break-all;
+        }
+        .structure-image {
+            max-width: 100%;
+            height: auto;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            margin: 20px 0;
+            background: white;
+            display: block;
+        }
+        .structures-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin: 20px 0;
+        }
+        .structure-box {
+            text-align: center;
+        }
+        .structure-box h3 {
+            color: #667eea;
+            font-size: 1.1em;
+            margin-bottom: 10px;
+        }
+        .badge {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 4px;
+            font-size: 0.85em;
+            font-weight: 500;
+            margin-right: 8px;
+        }
+        .badge-success { background: #28a745; color: white; }
+        .badge-warning { background: #ffc107; color: #333; }
+        .badge-danger { background: #dc3545; color: white; }
+        .badge-info { background: #17a2b8; color: white; }
+        footer {
+            margin-top: 40px;
+            padding-top: 20px;
+            border-top: 2px solid #e0e0e0;
+            text-align: center;
+            color: #999;
+            font-size: 0.9em;
+        }
+        .properties-content {
+            background: white;
+            padding: 15px;
+            border-radius: 6px;
+        }
+        .properties-content h6 {
+            color: #667eea;
+            font-size: 1.1em;
+            margin: 15px 0 10px 0;
+        }
+        .properties-content .badge {
+            margin: 3px;
+        }
+        .properties-content small {
+            display: block;
+            margin: 5px 0;
+            color: #666;
+        }
+        .alert {
+            padding: 12px;
+            border-radius: 6px;
+            margin: 10px 0;
+        }
+        .alert-info {
+            background: #d1ecf1;
+            border: 1px solid #bee5eb;
+            color: #0c5460;
+        }
+        .alert-danger {
+            background: #f8d7da;
+            border: 1px solid #f5c6cb;
+            color: #721c24;
+        }
+        .chat-entry {
+            margin: 15px 0;
+            padding: 12px;
+            border-radius: 8px;
+            border-left: 4px solid #667eea;
+        }
+        .chat-entry.user-msg {
+            background: #e3f2fd;
+            border-left-color: #2196f3;
+        }
+        .chat-entry.ai-msg {
+            background: #f5f5f5;
+            border-left-color: #667eea;
+        }
+        .chat-header {
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: #333;
+        }
+        .chat-content {
+            line-height: 1.6;
+            color: #555;
+        }
+        @media print {
+            body { background: white; padding: 20px; }
+            .container { box-shadow: none; }
+            .structures-grid { page-break-inside: avoid; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🧬 ${moleculeData.name || 'Unnamed Molecule'}</h1>
+        
+        <div class="section">
+            <h2>📋 Basic Information</h2>
+            <div class="info-row">
+                <span class="label">Molecular Formula:</span>
+                <span class="value">${moleculeData.molecular_formula || 'N/A'}</span>
+            </div>
+            <div class="info-row">
+                <span class="label">SMILES:</span>
+                <span class="value"><code>${moleculeData.smiles}</code></span>
+            </div>
+            <div class="info-row">
+                <span class="label">Molecular Weight:</span>
+                <span class="value">${moleculeData.molecular_weight ? moleculeData.molecular_weight + ' g/mol' : 'N/A'}</span>
+            </div>
+            ${moleculeData.toxicity_score !== null ? `
+            <div class="info-row">
+                <span class="label">Toxicity Score:</span>
+                <span class="value">${moleculeData.toxicity_score}</span>
+            </div>
+            ` : ''}
+            ${moleculeData.solubility !== null ? `
+            <div class="info-row">
+                <span class="label">Solubility:</span>
+                <span class="value">${moleculeData.solubility}</span>
+            </div>
+            ` : ''}
+        </div>
+        
+        ${(structure3DImage || structure2DImage) ? `
+        <div class="section">
+            <h2>🔬 Molecular Structures</h2>
+            <div class="structures-grid">
+                ${structure3DImage ? `
+                <div class="structure-box">
+                    <h3>3D Structure</h3>
+                    <img src="${structure3DImage}" alt="3D Structure" class="structure-image">
+                </div>
+                ` : ''}
+                ${structure2DImage ? `
+                <div class="structure-box">
+                    <h3>2D Structure</h3>
+                    <img src="${structure2DImage}" alt="2D Structure" class="structure-image">
+                </div>
+                ` : ''}
+            </div>
+        </div>
+        ` : ''}
+        
+        <div class="section">
+            <h2>🔬 Properties & Drug-Likeness</h2>
+            <div class="properties-content">
+                ${propertiesHTML}
+            </div>
+        </div>
+        
+        ${chatHistoryHTML}
+        
+        <footer>
+            <p><strong>Generated on ${new Date().toLocaleString()}</strong></p>
+            <p>Molecular Database | Drug Discovery Platform</p>
+            <p><em>This report contains computational predictions and should be validated experimentally.</em></p>
+        </footer>
+    </div>
+</body>
+</html>`;
+
+        const blob = new Blob([htmlContent], { type: 'text/html' });
+        const link = document.createElement('a');
+        link.href = URL.createObjectURL(blob);
+        link.download = `${moleculeData.name || 'molecule'}_report.html`;
+        link.click();
+    }
+
+    // Export data as JSON
+    function exportToJSON() {
+        const data = {
+            molecule: moleculeData,
+            exported_at: new Date().toISOString(),
+            properties: document.getElementById('propertiesContent')?.innerText || 'Not calculated'
+        };
+
+        const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+        const link = document.createElement('a');
+        link.href = URL.createObjectURL(blob);
+        link.download = `${moleculeData.name || 'molecule'}_data.json`;
+        link.click();
+    }
+
+    // Initialize viewers when page loads
+    window.addEventListener('DOMContentLoaded', function () {
+        init3DViewer();
+        init2DViewer();
+        const selector = document.getElementById('service3DSelector');
+        if (selector) {
+            selector.addEventListener('change', () => init3DViewer());
+        }
+    });
+
+    // Calculate Drug Discovery Properties (Combined with Drug-Likeness)
+    document.getElementById('calculatePropertiesBtn').addEventListener('click', async function () {
+        {% if not user.is_authenticated %}
+        // Show login modal
+        const loginModal = new bootstrap.Modal(document.getElementById('loginModal'));
+        loginModal.show();
+        return;
+        {% endif %}
+
+        const btn = this;
+        const loadingDiv = document.getElementById('propertiesLoading');
+        const contentDiv = document.getElementById('propertiesContent');
+
+        btn.disabled = true;
+        btn.innerHTML = '<span class="loading-spinner"></span>';
+        loadingDiv.style.display = 'block';
+        contentDiv.innerHTML = '';
+
+        try {
+            // Fetch both properties and drug-likeness metrics in parallel
+            const [propsResponse, metricsResponse] = await Promise.all([
+                fetch("{% url 'visualization:calculate_properties' %}", {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': '{{ csrf_token }}'
+                    },
+                    body: JSON.stringify({ smiles: moleculeData.smiles })
+                }),
+                fetch("{% url 'visualization:get_drug_likeness_metrics' %}", {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': '{{ csrf_token }}'
+                    },
+                    body: JSON.stringify({ smiles: moleculeData.smiles })
+                })
+            ]);
+
+            const propsData = await propsResponse.json();
+            const metricsData = await metricsResponse.json();
+
+            let html = '';
+
+            // Basic Properties Section
+            if (propsData.success && propsData.properties) {
+                const props = propsData.properties;
+                html += `
+                <div class="mb-3 pb-3 border-bottom">
+                    <h6 class="fw-bold text-primary mb-3">
+                        <i class="fas fa-atom me-1"></i> Chemical Properties
+                    </h6>
+                    <div class="row g-2">
+                        <div class="col-6">
+                            <div class="property-badge bg-primary text-white">
+                                <div class="small">LogP</div>
+                                <div class="fs-6 fw-bold">${props.logP.toFixed(2)}</div>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="property-badge bg-info text-white">
+                                <div class="small">TPSA</div>
+                                <div class="fs-6 fw-bold">${props.tpsa.toFixed(2)}</div>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="property-badge bg-secondary text-white">
+                                <div class="small">HBD</div>
+                                <div class="fs-6 fw-bold">${props.h_bond_donors}</div>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="property-badge bg-secondary text-white">
+                                <div class="small">HBA</div>
+                                <div class="fs-6 fw-bold">${props.h_bond_acceptors}</div>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="property-badge bg-secondary text-white">
+                                <div class="small">Rot. Bonds</div>
+                                <div class="fs-6 fw-bold">${props.rotatable_bonds}</div>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="property-badge bg-secondary text-white">
+                                <div class="small">Arom. Rings</div>
+                                <div class="fs-6 fw-bold">${props.aromatic_rings}</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+            }
+
+            // Drug-Likeness Metrics Section
+            if (metricsData.success && metricsData.metrics) {
+                const m = metricsData.metrics;
+
+                // Solubility
+                if (m.solubility) {
+                    const sol = m.solubility;
+                    const solClass = sol.logS > -4 ? 'success' : (sol.logS > -6 ? 'warning' : 'danger');
+                    html += `
+                    <div class="card border-0 shadow-sm mb-3" style="background: var(--metric-bg-solubility) !important;">
+                        <div class="card-body p-3" style="background: transparent !important;">
+                            <div class="d-flex align-items-center mb-2">
+                                <div class="rounded-circle p-2 me-3" style="width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; background: rgba(33,150,243,0.15);">
+                                    <i class="fas fa-tint" style="color: #1976D2; font-size: 1.1rem;"></i>
+                                </div>
+                                <div>
+                                    <h6 class="mb-0 fw-semibold" style="color: #0D47A1; font-size: 0.95rem; letter-spacing: 0.3px;">Solubility (ESOL)</h6>
+                                    <p class="mb-0" style="color: #1565C0; font-size: 0.75rem;">${sol.solubility_class}</p>
+                                </div>
+                            </div>
+                            <div class="d-flex align-items-center justify-content-between mt-2 pt-2" style="border-top: 1px solid rgba(33,150,243,0.3);">
+                                <span style="color: #1565C0; font-size: 0.85rem;">logS Value</span>
+                                <span class="badge text-${solClass} fw-semibold px-3" style="font-size: 0.85rem; color: var(--metric-badge-text) !important; border: 1px solid var(--metric-badge-border); background: var(--metric-badge-bg);">${sol.logS}</span>
+                            </div>
+                            <p class="mb-0 mt-2" style="color: #1976D2; font-size: 0.8rem; line-height: 1.4;">${sol.interpretation}</p>
+                        </div>
+                    </div>
+                `;
+                }
+
+                // Lipinski
+                if (m.lipinski) {
+                    const lip = m.lipinski;
+                    html += `
+                    <div class="card border-0 shadow-sm mb-3" style="background: var(--metric-bg-lipinski) !important;">
+                        <div class="card-body p-3" style="background: transparent !important;">
+                            <div class="d-flex align-items-center mb-2">
+                                <div class="rounded-circle p-2 me-3" style="width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; background: rgba(3,169,244,0.15);">
+                                    <i class="fas ${lip.compliant ? 'fa-check-circle' : 'fa-times-circle'}" style="color: #0277BD; font-size: 1.1rem;"></i>
+                                </div>
+                                <div>
+                                    <h6 class="mb-0 fw-semibold" style="color: #01579B; font-size: 0.95rem; letter-spacing: 0.3px;">Lipinski's Rule of Five</h6>
+                                    <p class="mb-0" style="color: #0277BD; font-size: 0.75rem;">Drug-likeness Assessment</p>
+                                </div>
+                            </div>
+                            <div class="d-flex align-items-center justify-content-between mt-2 pt-2" style="border-top: 1px solid rgba(3,169,244,0.3);">
+                                <span style="color: #0277BD; font-size: 0.85rem;">Violations</span>
+                                <span class="badge ${lip.compliant ? 'text-success' : 'text-danger'} fw-semibold px-3" style="font-size: 0.85rem; border: 1px solid var(--metric-badge-border); background: var(--metric-badge-bg); color: var(--metric-badge-text) !important;">${lip.violations}</span>
+                            </div>
+                            <p class="mb-0 mt-2" style="color: #0288D1; font-size: 0.8rem; line-height: 1.4;">${lip.interpretation}</p>
+                        </div>
+                    </div>
+                `;
+                }
+
+                // Veber
+                if (m.veber) {
+                    const veb = m.veber;
+                    html += `
+                    <div class="card border-0 shadow-sm mb-3" style="background: var(--metric-bg-veber) !important;">
+                        <div class="card-body p-3" style="background: transparent !important;">
+                            <div class="d-flex align-items-center mb-2">
+                                <div class="rounded-circle p-2 me-3" style="width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; background: rgba(66,165,245,0.15);">
+                                    <i class="fas fa-microscope" style="color: #1565C0; font-size: 1.1rem;"></i>
+                                </div>
+                                <div>
+                                    <h6 class="mb-0 fw-semibold" style="color: #0D47A1; font-size: 0.95rem; letter-spacing: 0.3px;">Veber's Rule</h6>
+                                    <p class="mb-0" style="color: #1565C0; font-size: 0.75rem;">Oral Bioavailability</p>
+                                </div>
+                            </div>
+                            <div class="d-flex align-items-center justify-content-between mt-2 pt-2" style="border-top: 1px solid rgba(66,165,245,0.3);">
+                                <span style="color: #1565C0; font-size: 0.85rem;">Status</span>
+                                <span class="badge ${veb.compliant ? 'text-success' : 'text-warning'} fw-semibold px-3" style="font-size: 0.85rem; border: 1px solid var(--metric-badge-border); background: var(--metric-badge-bg); color: var(--metric-badge-text) !important;">${veb.compliant ? 'Passed' : 'Failed'}</span>
+                            </div>
+                            <p class="mb-0 mt-2" style="color: #1976D2; font-size: 0.8rem; line-height: 1.4;">${veb.interpretation}</p>
+                        </div>
+                    </div>
+                `;
+                }
+
+                // Ghose
+                if (m.ghose) {
+                    const gho = m.ghose;
+                    html += `
+                    <div class="card border-0 shadow-sm mb-3" style="background: var(--metric-bg-ghose) !important;">
+                        <div class="card-body p-3" style="background: transparent !important;">
+                            <div class="d-flex align-items-center mb-2">
+                                <div class="rounded-circle p-2 me-3" style="width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; background: rgba(33,150,243,0.15);">
+                                    <i class="fas fa-filter" style="color: #1976D2; font-size: 1.1rem;"></i>
+                                </div>
+                                <div>
+                                    <h6 class="mb-0 fw-semibold" style="color: #0D47A1; font-size: 0.95rem; letter-spacing: 0.3px;">Ghose Filter</h6>
+                                    <p class="mb-0" style="color: #1565C0; font-size: 0.75rem;">Physicochemical Properties</p>
+                                </div>
+                            </div>
+                            <div class="d-flex align-items-center justify-content-between mt-2 pt-2" style="border-top: 1px solid rgba(33,150,243,0.3);">
+                                <span style="color: #1565C0; font-size: 0.85rem;">Status</span>
+                                <span class="badge ${gho.compliant ? 'text-success' : 'text-warning'} fw-semibold px-3" style="font-size: 0.85rem; border: 1px solid var(--metric-badge-border); background: var(--metric-badge-bg); color: var(--metric-badge-text) !important;">${gho.compliant ? 'Passed' : gho.violations + ' Violation(s)'}</span>
+                            </div>
+                            <p class="mb-0 mt-2" style="color: #1976D2; font-size: 0.8rem; line-height: 1.4;">${gho.interpretation}</p>
+                        </div>
+                    </div>
+                `;
+                }
+
+                // Toxicity
+                if (m.toxicity) {
+                    const tox = m.toxicity;
+                    let gradientColor = 'var(--metric-bg-toxicity)';
+                    html += `
+                    <div class="card border-0 shadow-sm mb-3" style="background: ${gradientColor} !important;">
+                        <div class="card-body p-3" style="background: transparent !important;">
+                            <div class="d-flex align-items-center mb-2">
+                                <div class="rounded-circle p-2 me-3" style="width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; background: rgba(0,188,212,0.15);">
+                                    <i class="fas fa-exclamation-triangle" style="color: ${tox.risk_level === 'Low' ? '#00897B' : (tox.risk_level === 'Medium' ? '#F57C00' : '#C62828')}; font-size: 1.1rem;"></i>
+                                </div>
+                                <div>
+                                    <h6 class="mb-0 fw-semibold" style="color: #006064; font-size: 0.95rem; letter-spacing: 0.3px;">Toxicity Alerts</h6>
+                                    <p class="mb-0" style="color: #00838F; font-size: 0.75rem;">Safety Assessment</p>
+                                </div>
+                            </div>
+                            <div class="d-flex align-items-center justify-content-between mt-2 pt-2" style="border-top: 1px solid rgba(0,188,212,0.3);">
+                                <span style="color: #00838F; font-size: 0.85rem;">Risk Level</span>
+                                <span class="badge text-${tox.risk_level === 'Low' ? 'success' : (tox.risk_level === 'Medium' ? 'warning' : 'danger')} fw-semibold px-3" style="font-size: 0.85rem; border: 1px solid var(--metric-badge-border); background: var(--metric-badge-bg); color: var(--metric-badge-text) !important;">${tox.risk_level} (${tox.num_alerts})</span>
+                            </div>
+                            <p class="mb-1 mt-2" style="color: #00838F; font-size: 0.8rem; line-height: 1.4;">${tox.interpretation}</p>
+                            ${tox.alerts_found.length > 0 ? `
+                                <div class="alert mb-0 mt-2 py-2 px-3" style="font-size: 0.8rem; background: rgba(0,188,212,0.15); border: 1px solid rgba(0,188,212,0.3); color: #00695C;">
+                                    <strong><i class="fas fa-info-circle me-1"></i> Alerts:</strong> ${tox.alerts_found.join(', ')}
+                                </div>
+                        ` : ''}
+                    </div>
+                `;
+                }
+            }
+
+            if (!html) {
+                html = '<div class="alert alert-danger small mb-0">Failed to calculate properties</div>';
+            }
+
+            contentDiv.innerHTML = html;
+
+        } catch (error) {
+            contentDiv.innerHTML = `<div class="alert alert-danger small mb-0">Error: ${error.message}</div>`;
+        } finally {
+            loadingDiv.style.display = 'none';
+            btn.disabled = false;
+            btn.innerHTML = '<i class="fas fa-calculator"></i>';
+        }
+    });
+
+    // Fetch PDB ID from OpenAI
+    document.getElementById('fetchPdbBtn').addEventListener('click', async function () {
+        {% if not user.is_authenticated %}
+        // Show login modal
+        const loginModal = new bootstrap.Modal(document.getElementById('loginModal'));
+        loginModal.show();
+        return;
+        {% endif %}
+
+        const btn = this;
+        const resultDiv = document.getElementById('pdbResult');
+
+        // Disable button and show loading
+        btn.disabled = true;
+        btn.innerHTML = '<span class="loading-spinner"></span> Fetching...';
+        resultDiv.style.display = 'none';
+
+        try {
+            const response = await fetch("{% url 'visualization:get_pdb_from_smiles' %}", {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': '{{ csrf_token }}'
+                },
+                body: JSON.stringify({
+                    smiles: moleculeData.smiles
+                })
+            });
+
+            const data = await response.json();
+
+            if (data.success) {
+                resultDiv.className = 'alert alert-success mb-0';
+                resultDiv.innerHTML = `<strong>PDB ID Result:</strong><br>${data.pdb_id}`;
+            } else {
+                resultDiv.className = 'alert alert-danger mb-0';
+                resultDiv.innerHTML = `<strong>Error:</strong> ${data.error}`;
+            }
+
+            resultDiv.style.display = 'block';
+        } catch (error) {
+            resultDiv.className = 'alert alert-danger mb-0';
+            resultDiv.innerHTML = `<strong>Error:</strong> ${error.message}`;
+            resultDiv.style.display = 'block';
+        } finally {
+            btn.disabled = false;
+            btn.innerHTML = '<i class="fas fa-search me-2"></i> Fetch PDB ID from SMILES';
+        }
+    });
+
+    // Chat functionality
+    async function sendMessage() {
+        {% if not user.is_authenticated %}
+        // Show login modal
+        const loginModal = new bootstrap.Modal(document.getElementById('loginModal'));
+        loginModal.show();
+        return;
+        {% endif %}
+
+        const input = document.getElementById('chatInput');
+        const message = input.value.trim();
+
+        if (!message) return;
+
+        // Add user message to chat
+        addMessageToChat(message, 'user');
+        input.value = '';
+
+        // Show loading
+        const loadingId = addLoadingMessage();
+
+        try {
+            const response = await fetch("{% url 'visualization:chat_with_ai' %}", {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': '{{ csrf_token }}'
+                },
+                body: JSON.stringify({
+                    message: message,
+                    molecule_context: moleculeData
+                })
+            });
+
+            const data = await response.json();
+
+            // Remove loading message
+            removeLoadingMessage(loadingId);
+
+            if (data.success) {
+                addMessageToChat(data.response, 'ai');
+            } else {
+                showError(data.error);
+            }
+        } catch (error) {
+            removeLoadingMessage(loadingId);
+            showError('Failed to connect to AI service. Please ensure Ollama is running with Gemma model.');
+        }
+    }
+
+    function addMessageToChat(message, sender) {
+        const chatMessages = document.getElementById('chatMessages');
+        const messageDiv = document.createElement('div');
+        messageDiv.className = `chat-message ${sender}`;
+
+        if (sender === 'ai') {
+            // Render HTML for AI messages (Markdown converted to HTML by backend)
+            messageDiv.innerHTML = `<strong>AI Assistant:</strong><br>${message}`;
+        } else {
+            // Plain text for user messages
+            messageDiv.textContent = message;
+        }
+
+        chatMessages.appendChild(messageDiv);
+        chatMessages.scrollTop = chatMessages.scrollHeight;
+    }
+
+    function addLoadingMessage() {
+        const chatMessages = document.getElementById('chatMessages');
+        const loadingDiv = document.createElement('div');
+        const loadingId = 'loading-' + Date.now();
+        loadingDiv.id = loadingId;
+        loadingDiv.className = 'chat-message ai';
+        loadingDiv.innerHTML = '<span class="loading-spinner"></span> Thinking...';
+        chatMessages.appendChild(loadingDiv);
+        chatMessages.scrollTop = chatMessages.scrollHeight;
+        return loadingId;
+    }
+
+    function removeLoadingMessage(loadingId) {
+        const loadingDiv = document.getElementById(loadingId);
+        if (loadingDiv) {
+            loadingDiv.remove();
+        }
+    }
+
+    function showError(errorMessage) {
+        const errorDiv = document.getElementById('chatError');
+        errorDiv.textContent = errorMessage;
+        errorDiv.style.display = 'block';
+
+        setTimeout(() => {
+            errorDiv.style.display = 'none';
+        }, 5000);
+    }
+</script>
+{% endblock %}
